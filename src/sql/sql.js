@@ -1,0 +1,264 @@
+import React from 'react';
+import {
+    Table, Modal, Button, Layout, notification, Tabs
+} from 'antd';
+import reqwest from 'reqwest';
+import 'antd/dist/antd.css';
+import './sql.css';
+
+import CodeMirror from 'react-codemirror';
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/mode/sql/sql';
+import 'codemirror/addon/hint/show-hint.css';
+import 'codemirror/addon/hint/show-hint.js';
+import 'codemirror/addon/hint/sql-hint.js';
+import 'codemirror/theme/darcula.css';
+
+const codemirrorOptions={
+    lineNumbers: true,
+    lineSeparator: ' ',
+    lineWrapping: true,
+    mode: {name: "text/x-mysql"},
+    extraKeys: {"Alt-/": "autocomplete"},
+    theme: "darcula"
+};
+
+const {
+    Header, Footer, Sider, Content,
+} = Layout;
+
+const TabPane = Tabs.TabPane;
+
+const transposeColumns = [{
+    dataIndex: 'k',
+    fixed: 'left',
+    width: 1,
+}, {
+    dataIndex: 'v',
+}];
+
+const openNotification = (msg) => {
+    notification.error({
+        message: '执行失败',
+        description: msg,
+    });
+};
+
+class Sql extends React.Component {
+
+    state = {
+        data: [],
+        pagination: {},
+        loading: false,
+
+        visible: false,
+        dataRow: [],
+        columns: [],
+
+        buttonLoading: false,
+    };
+
+    showModal = (row) => {
+        this.setState({
+            visible: true,
+            dataRow: this.handleArray(row),
+        });
+    };
+
+    handleOk = () => {
+        this.setState({
+            visible: false,
+        });
+    };
+
+    handleCancel = () => {
+        this.setState({
+            visible: false,
+        });
+    };
+
+    handleTableChange = (pagination) => {
+        const pager = { ...this.state.pagination };
+        pager.current = pagination.current;
+        this.setState({
+            pagination: pager,
+        });
+        this.fetch({
+            count: 5,
+            page: pagination.current,
+        });
+    };
+
+    fetch = (params = {}) => {
+        this.setState({ loading: true });
+        reqwest({
+            url: 'http://localhost:8080/_xsqla',
+            method: 'get',
+            crossOrigin: true,
+            data: {
+                ...params,
+            },
+            type: 'json',
+        }).then((data) => {
+            const pagination = { ...this.state.pagination };
+            pagination.total = data.code;
+            this.setState({
+                data: data,
+                columns: this.changeColumns(data),
+                pagination,
+            });
+        }, (err, msg) => {
+            openNotification(msg);
+        }).always(() => {
+            this.setState({
+                loading: false,
+                buttonLoading: false
+            });
+        });
+    };
+
+    componentDidMount() {
+        document.addEventListener("keydown", this.onKeyDown);
+        // this.fetch({sql : "select * from t_student", page: 1});
+    }
+
+    onKeyDown = (e) => {
+        //ctrl+enter
+        if (e.ctrlKey && e.keyCode === 13) {
+            this.setState({ buttonLoading: true });
+            const editor = this.refs.editorSql.getCodeMirror();
+            let sql = editor.getSelection();
+            if (sql === '') {
+                sql = editor.getValue();
+            }
+            if (sql === '') {
+                this.setState({ buttonLoading: false });
+                openNotification("请输入sql");
+                return;
+            }
+            this.fetch({sql : sql, page: 1});
+        }
+    };
+
+    changeColumns = (data) => {
+        let dataRows = [];
+        let k = 0;
+        for (let j in data[0]) {
+            let dataRow = {};
+            dataRow.title = j;
+            dataRow.dataIndex = j;
+            dataRows[k] = dataRow;
+            k++;
+        }
+        return dataRows;
+    };
+
+    onRowClick1 = (rowKeys) => {
+        return {
+            onDoubleClick : () => {this.showModal(rowKeys)},
+        }
+    };
+
+    handleArray = (row) => {
+        let dataRow = [];
+        let j = 0;
+        for (let i in row) {
+            let data = {};
+            data.k = i;
+            data.v = row[i];
+            dataRow[j] = data;
+            j++;
+        }
+        return dataRow;
+    };
+
+    enterLoading = () => {
+        this.setState({ buttonLoading: true });
+        const editor = this.refs.editorSql.getCodeMirror();
+        let sql = editor.getSelection();
+        if (sql === '') {
+            sql = editor.getValue();
+        }
+        if (sql === '') {
+            this.setState({ buttonLoading: false });
+            openNotification("请输入sql");
+            return;
+        }
+        this.fetch({sql : sql, page: 1});
+    };
+
+    render() {
+        return (
+            <div>
+                <Layout style={{ padding: '1%' }}>
+                    <Sider width={'25%'}>111</Sider>
+                    <Layout width={'75%'} style={{ paddingLeft: '1%' }}>
+                        <Content>
+                            <CodeMirror ref="editorSql" options={codemirrorOptions} />
+                        </Content>
+                        <Footer align="right">
+                            <Button type="primary" loading={this.state.buttonLoading} onClick={this.enterLoading} size={'large'}>
+                                执行（CTRL+ENTER）
+                            </Button>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <Button type="primary" size={'large'}>
+                                导出
+                            </Button>
+                        </Footer>
+                    </Layout>
+                </Layout>
+                <Layout style={{ padding: '1%' }}>
+                    <Tabs onChange={console.log()}>
+                        <TabPane tab="执行" key="1">
+                            <Content style={{ background: '#FFFFFF' }}>
+                                <Table
+                                    columns={this.state.columns}
+                                    rowKey={record => record._no}
+                                    dataSource={this.state.data}
+                                    pagination={this.state.pagination}
+                                    loading={this.state.loading}
+                                    onChange={this.handleTableChange}
+                                    bordered
+                                    onRow={this.onRowClick1}
+                                    scroll={{x : true}}
+                                    size="middle"
+                                />
+
+                                <Modal
+                                    title = '列块显示'
+                                    visible={this.state.visible}
+                                    onOk={this.handleOk}
+                                    onCancel={this.handleCancel}
+                                    width = {'50%'}
+                                    footer={
+                                        <Button type="primary" onClick={this.handleOk}>
+                                            确认
+                                        </Button>
+                                    }
+                                >
+                                    <Table
+                                        columns={transposeColumns}
+                                        showHeader={false}
+                                        rowKey={record => record.key}
+                                        dataSource={this.state.dataRow}
+                                        pagination={false}
+                                        bordered
+                                        scroll={{x : true}}
+                                        size="middle"
+                                    />
+                                </Modal>
+                            </Content>
+                        </TabPane>
+                        <TabPane tab="表结构" key="2">Content of Tab Pane 2</TabPane>
+                    </Tabs>
+                    <Footer style={{ textAlign: 'center' }}>
+                        ©2018 Created by GSS
+                    </Footer>
+                </Layout>
+            </div>
+        );
+    }
+
+}
+
+export default Sql;
