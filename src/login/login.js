@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Form, Icon, Input, Button, Checkbox, Layout
+    Form, Icon, Input, Button, Layout, Row, Col, notification
 } from 'antd';
 import { Redirect } from 'react-router-dom';
 import reqwest from 'reqwest';
@@ -14,14 +14,27 @@ const {
     Content, Footer, Header
 } = Layout;
 
+const openNotification = (msg) => {
+    notification.error({
+        message: '登录失败',
+        description: msg,
+    });
+};
+
 class LoginForm extends React.Component {
 
     state = {
         redirect: false,
-        buttonLoading: false
+        buttonLoading: false,
+
+        captchaUrl: '',
     };
 
-    handleSubmit = (e) => {
+    componentDidMount() {
+        this.getCaptcha();
+    }
+
+    checkUser = (e) => {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
             if (!err) {
@@ -37,7 +50,7 @@ class LoginForm extends React.Component {
                 }).then((data) => {
                     this.setState({ redirect: true });
                 }, (err, msg) => {
-
+                    openNotification(msg);
                 }).always(() => {
                     this.setState({ buttonLoading: false });
                 });
@@ -45,25 +58,18 @@ class LoginForm extends React.Component {
         });
     };
 
+    getCaptcha = () => {
+        this.setState({ captchaUrl: 'http://' + url + '/getCaptcha?r=' + Math.random() });
+    };
+
     render() {
-
         const { getFieldDecorator } = this.props.form;
-
         return (
-            this.state.redirect ? <Redirect
-                to={
-                    {
-                        pathname:"/sql",
-                    search:"p1=1&p2=2",
-                    state:{"name":"kiramario","age":26}
-                }
-                }
-            />
-                    :
+            this.state.redirect ? <Redirect to={{pathname:"/sql"}} /> :
             <Layout style={{height: '100vh'}}>
                 <Header style={{color: "snow", fontSize: "large", textAlign: 'center'}}>GSS的想象空间</Header>
                 <Content align="right" style={{padding: "10%"}}>
-                    <Form onSubmit={this.handleSubmit} className="login-form">
+                    <Form onSubmit={this.checkUser} className="login-form">
                         <FormItem>
                             {getFieldDecorator('userName', {
                                 rules: [{ required: true, message: '请输入用户名' }],
@@ -79,12 +85,24 @@ class LoginForm extends React.Component {
                             )}
                         </FormItem>
                         <FormItem>
-                            {getFieldDecorator('remember', {
-                                valuePropName: 'checked',
-                                initialValue: true,
-                            })(
-                                <Checkbox>记住我</Checkbox>
-                            )}
+                            <Row gutter={10}>
+                                <Col span={14}>
+                                    {getFieldDecorator('captcha', {
+                                        rules: [{ required: true, message: '请输入验证码' }],
+                                    })(
+                                        <Input size={'large'} prefix={<Icon type="safety" className="login-form-icon" />} placeholder="验证码" />
+                                    )}
+                                </Col>
+                                <Col span={10}
+                                     onClick={() => {
+                                         this.getCaptcha();
+                                     }}
+                                >
+                                    {<img src={this.state.captchaUrl} style={{cursor:'pointer'}} alt="验证码" />}
+                                </Col>
+                            </Row>
+                        </FormItem>
+                        <FormItem>
                             <Button size={'large'} type="primary" loading={this.state.buttonLoading} htmlType="submit" className="login-form-button">
                                 登录
                             </Button>
