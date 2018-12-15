@@ -4,6 +4,7 @@ import {
 } from 'antd';
 import { Redirect } from 'react-router-dom';
 import reqwest from 'reqwest';
+import md5 from 'md5-node';
 import 'antd/dist/antd.css';
 import './login.css';
 import url from '../config.js';
@@ -44,7 +45,9 @@ class LoginForm extends React.Component {
                     method: 'post',
                     crossOrigin: true,
                     data: {
-                        ...values,
+                        'userName': values.userName,
+                        'password': md5(values.password),
+                        'captcha': values.captcha,
                     },
                     type: 'json',
                 }).then((data) => {
@@ -98,7 +101,7 @@ class LoginForm extends React.Component {
                                          this.getCaptcha();
                                      }}
                                 >
-                                    {<img src={this.state.captchaUrl} style={{cursor:'pointer'}} alt="验证码" />}
+                                    {<img src={this.state.captchaUrl} style={{cursor:'pointer', verticalAlign: 'top'}} alt="验证码" />}
                                 </Col>
                             </Row>
                         </FormItem>

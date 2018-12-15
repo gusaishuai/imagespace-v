@@ -5,6 +5,7 @@
   "dependencies": {
     "less": "^3.9.0",
     "less-loader": "^4.1.0",
+    "md5-node": "^1.0.1",
     "react": "^16.6.3",
     "react-codemirror": "^1.0.0",
     "react-dom": "^16.6.3",
