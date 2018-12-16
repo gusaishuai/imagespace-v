@@ -15,7 +15,7 @@ const {
     Content, Footer, Header
 } = Layout;
 
-const openNotification = (msg) => {
+const errorNotification = (msg) => {
     notification.error({
         message: '登录失败',
         description: msg,
@@ -41,9 +41,10 @@ class LoginForm extends React.Component {
             if (!err) {
                 this.setState({ buttonLoading: true });
                 reqwest({
-                    url: 'http://' + url + '/_xsql1',
+                    url: 'http://' + url + '/exec?_mt=login.checkUser',
                     method: 'post',
                     crossOrigin: true,
+                    withCredentials: true,
                     data: {
                         'userName': values.userName,
                         'password': md5(values.password),
@@ -51,9 +52,16 @@ class LoginForm extends React.Component {
                     },
                     type: 'json',
                 }).then((data) => {
-                    this.setState({ redirect: true });
+                    if (data.code === 0) {
+                        this.setState({ redirect: true });
+                    } else {
+                        //提示错误
+                        errorNotification(data.msg);
+                        //重新获取验证码
+                        this.getCaptcha();
+                    }
                 }, (err, msg) => {
-                    openNotification(msg);
+                    errorNotification(msg);
                 }).always(() => {
                     this.setState({ buttonLoading: false });
                 });
@@ -62,7 +70,7 @@ class LoginForm extends React.Component {
     };
 
     getCaptcha = () => {
-        this.setState({ captchaUrl: 'http://' + url + '/getCaptcha?r=' + Math.random() });
+        this.setState({ captchaUrl: 'http://' + url + '/exec?_mt=login.getCaptcha&r=' + Math.random() });
     };
 
     render() {

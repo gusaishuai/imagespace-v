@@ -5,7 +5,6 @@ import {
 import reqwest from 'reqwest';
 import 'antd/dist/antd.css';
 import './sql.css';
-
 import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/sql/sql';
@@ -13,6 +12,8 @@ import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint.js';
 import 'codemirror/addon/hint/sql-hint.js';
 import 'codemirror/theme/darcula.css';
+import url from '../config.js';
+import { Redirect } from 'react-router-dom';
 
 const codemirrorOptions={
     lineNumbers: true,
@@ -47,6 +48,8 @@ const openNotification = (msg) => {
 class Sql extends React.Component {
 
     state = {
+        noLoginRedirect: false,
+
         data: [],
         pagination: {},
         loading: false,
@@ -83,30 +86,44 @@ class Sql extends React.Component {
         this.setState({
             pagination: pager,
         });
+
+        //TODO
+        const editor = this.refs.editorSql.getCodeMirror();
+        let sql = editor.getSelection();
+        if (sql === '') {
+            sql = editor.getValue();
+        }
         this.fetch({
-            count: 5,
-            page: pagination.current,
+            sql: sql,
+            pageNo: pagination.current,
         });
     };
 
     fetch = (params = {}) => {
         this.setState({ loading: true });
         reqwest({
-            url: 'http://localhost:8080/_xsqla',
-            method: 'get',
+            url: 'http://' + url + '/exec?_mt=sql.execSql',
+            method: 'post',
             crossOrigin: true,
+            withCredentials: true,
             data: {
                 ...params,
             },
             type: 'json',
         }).then((data) => {
-            const pagination = { ...this.state.pagination };
-            pagination.total = data.code;
-            this.setState({
-                data: data,
-                columns: this.changeColumns(data),
-                pagination,
-            });
+            if (data.code === 1001) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== 0) {
+                openNotification(data.msg);
+            } else {
+                const pagination = {...this.state.pagination};
+                pagination.total = data.result.pagination.totalCount;
+                this.setState({
+                    data: data.result.resultList,
+                    columns: this.changeColumns(data.result.resultList),
+                    pagination,
+                });
+            }
         }, (err, msg) => {
             openNotification(msg);
         }).always(() => {
@@ -119,7 +136,7 @@ class Sql extends React.Component {
 
     componentDidMount() {
         document.addEventListener("keydown", this.onKeyDown);
-        // this.fetch({sql : "select * from t_student", page: 1});
+        this.fetch({sql : "select * from t_user"});
     }
 
     onKeyDown = (e) => {
@@ -136,7 +153,7 @@ class Sql extends React.Component {
                 openNotification("请输入sql");
                 return;
             }
-            this.fetch({sql : sql, page: 1});
+            this.fetch({sql : sql});
         }
     };
 
@@ -184,11 +201,12 @@ class Sql extends React.Component {
             openNotification("请输入sql");
             return;
         }
-        this.fetch({sql : sql, page: 1});
+        this.fetch({sql : sql});
     };
 
     render() {
         return (
+            this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Layout style={{ padding: '1%' }}>
                     <Sider width={'25%'}>111</Sider>
