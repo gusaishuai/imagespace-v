@@ -150,7 +150,12 @@ class SqlPage extends React.Component {
             } else if (data.code !== 0) {
                 openNotification(data.msg);
             } else {
-                this.setState({ tablesData: data.result });
+                this.setState({
+                    tablesData: data.result.map(d =>
+                        <Menu.Item key={d}>
+                            <span>{d}</span>
+                        </Menu.Item>
+                ) });
             }
         }, (err, msg) => {
             openNotification(msg);
@@ -237,14 +242,9 @@ class SqlPage extends React.Component {
             this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Layout>
-                    <Sider width={'25%'} style={{overflow: 'auto'}}>
+                    <Sider width={'25%'} style={{height: '60vh', overflow: 'auto'}}>
                         <Menu theme="dark">
-                            <Menu.Item key={this.state.tablesData[0]}>
-                                <span>{this.state.tablesData[0]}</span>
-                            </Menu.Item>
-                            <Menu.Item key={this.state.tablesData[1]}>
-                                <span>{this.state.tablesData[1]}</span>
-                            </Menu.Item>
+                            {this.state.tablesData}
                         </Menu>
                     </Sider>
                     <Layout width={'75%'} style={{ paddingLeft: '1%' }}>
