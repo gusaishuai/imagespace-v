@@ -208,8 +208,8 @@ class Sql extends React.Component {
         return (
             this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
-                <Layout style={{ padding: '1%' }}>
-                    <Sider width={'25%'}>111</Sider>
+                <Layout>
+                    <Sider width={'25%'} style={{overflow: 'auto'}}>111</Sider>
                     <Layout width={'75%'} style={{ paddingLeft: '1%' }}>
                         <Content>
                             <CodeMirror ref="editorSql" options={codemirrorOptions} />
@@ -225,7 +225,7 @@ class Sql extends React.Component {
                         </Footer>
                     </Layout>
                 </Layout>
-                <Layout style={{ padding: '1%' }}>
+                <Layout>
                     <Tabs onChange={console.log()}>
                         <TabPane tab="执行" key="1">
                             <Content style={{ background: '#FFFFFF' }}>
