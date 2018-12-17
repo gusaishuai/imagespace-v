@@ -7,3 +7,8 @@
 .login-form-button {
     width: 100%;
 }
+.login-form-header {
+    color: white;
+    font-size: large;
+    text-align: center;
+}

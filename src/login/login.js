@@ -22,7 +22,7 @@ const errorNotification = (msg) => {
     });
 };
 
-class LoginForm extends React.Component {
+class LoginPage extends React.Component {
 
     state = {
         redirect: false,
@@ -76,9 +76,9 @@ class LoginForm extends React.Component {
     render() {
         const { getFieldDecorator } = this.props.form;
         return (
-            this.state.redirect ? <Redirect to={{pathname:"/sql"}} /> :
+            this.state.redirect ? <Redirect to={{pathname:"/menu"}} /> :
             <Layout style={{height: '100vh'}}>
-                <Header style={{color: "snow", fontSize: "large", textAlign: 'center'}}>GSS的想象空间</Header>
+                <Header className="login-form-header" >GSS的想象空间</Header>
                 <Content align="right" style={{padding: "10%"}}>
                     <Form onSubmit={this.checkUser} className="login-form">
                         <FormItem>
@@ -128,6 +128,4 @@ class LoginForm extends React.Component {
     }
 }
 
-const Login = Form.create()(LoginForm);
-
-export default Login;
+export default Form.create()(LoginPage);

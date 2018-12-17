@@ -1,0 +1,16 @@
+.menu-icon {
+    color: white;
+    font-size: large;
+    line-height: 64px;
+    padding: 0 24px;
+    cursor: pointer;
+    transition: color .3s;
+}
+.menu-icon:hover {
+    color: deepskyblue;
+}
+.menu-header {
+    background: white;
+    font-size: large;
+    text-align: center;
+}

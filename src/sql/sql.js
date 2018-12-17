@@ -1,7 +1,5 @@
 import React from 'react';
-import {
-    Table, Modal, Button, Layout, notification, Tabs
-} from 'antd';
+import {Button, Layout, Menu, Modal, notification, Table, Tabs} from 'antd';
 import reqwest from 'reqwest';
 import 'antd/dist/antd.css';
 import './sql.css';
@@ -13,7 +11,7 @@ import 'codemirror/addon/hint/show-hint.js';
 import 'codemirror/addon/hint/sql-hint.js';
 import 'codemirror/theme/darcula.css';
 import url from '../config.js';
-import { Redirect } from 'react-router-dom';
+import {Redirect} from 'react-router-dom';
 
 const codemirrorOptions={
     lineNumbers: true,
@@ -45,7 +43,7 @@ const openNotification = (msg) => {
     });
 };
 
-class Sql extends React.Component {
+class SqlPage extends React.Component {
 
     state = {
         noLoginRedirect: false,
@@ -59,6 +57,10 @@ class Sql extends React.Component {
         columns: [],
 
         buttonLoading: false,
+        
+        tablesData: [],
+        siderLoading: false,
+        aaa: [],
     };
 
     showModal = (row) => {
@@ -134,9 +136,35 @@ class Sql extends React.Component {
         });
     };
 
+    getAllTables = () => {
+        this.setState({ siderLoading: true });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=sql.getAllTables',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            type: 'json',
+        }).then((data) => {
+            if (data.code === 1001) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== 0) {
+                openNotification(data.msg);
+            } else {
+                this.setState({ tablesData: data.result });
+            }
+        }, (err, msg) => {
+            openNotification(msg);
+        }).always(() => {
+            this.setState({
+                siderLoading: false,
+            });
+        });
+    };
+
     componentDidMount() {
         document.addEventListener("keydown", this.onKeyDown);
         this.fetch({sql : "select * from t_user"});
+        this.getAllTables();
     }
 
     onKeyDown = (e) => {
@@ -209,7 +237,16 @@ class Sql extends React.Component {
             this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Layout>
-                    <Sider width={'25%'} style={{overflow: 'auto'}}>111</Sider>
+                    <Sider width={'25%'} style={{overflow: 'auto'}}>
+                        <Menu theme="dark">
+                            <Menu.Item key={this.state.tablesData[0]}>
+                                <span>{this.state.tablesData[0]}</span>
+                            </Menu.Item>
+                            <Menu.Item key={this.state.tablesData[1]}>
+                                <span>{this.state.tablesData[1]}</span>
+                            </Menu.Item>
+                        </Menu>
+                    </Sider>
                     <Layout width={'75%'} style={{ paddingLeft: '1%' }}>
                         <Content>
                             <CodeMirror ref="editorSql" options={codemirrorOptions} />
@@ -279,4 +316,4 @@ class Sql extends React.Component {
 
 }
 
-export default Sql;
+export default SqlPage;
