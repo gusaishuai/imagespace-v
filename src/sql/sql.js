@@ -60,7 +60,10 @@ class SqlPage extends React.Component {
         
         tablesData: [],
         siderLoading: false,
-        aaa: [],
+
+        tableColumns: [],
+        columnData: [],
+        columnLoading: false,
     };
 
     showModal = (row) => {
@@ -132,6 +135,37 @@ class SqlPage extends React.Component {
             this.setState({
                 loading: false,
                 buttonLoading: false
+            });
+        });
+    };
+
+    tableColumn = (e) => {
+        this.setState({ columnLoading: true });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=sql.getColumn',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'table': e.key,
+            },
+            type: 'json',
+        }).then((data) => {
+            if (data.code === 1001) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== 0) {
+                openNotification(data.msg);
+            } else {
+                this.setState({
+                    columnData: data.result,
+                    tableColumns: this.changeColumns(data.result),
+                });
+            }
+        }, (err, msg) => {
+            openNotification(msg);
+        }).always(() => {
+            this.setState({
+                columnLoading: false,
             });
         });
     };
@@ -252,7 +286,7 @@ class SqlPage extends React.Component {
         if (!sql) {
             return;
         }
-        this.exportSql({sql : sql});
+        window.location.href = 'http://' + url + '/exec?_mt=sql.exportSql&sql=' + sql;
     };
 
     getSql = () => {
@@ -275,7 +309,7 @@ class SqlPage extends React.Component {
             <div>
                 <Layout>
                     <Sider width={'25%'} style={{ height: '388px', overflow: 'auto'}}>
-                        <Menu theme="dark">
+                        <Menu theme="dark" onClick={this.tableColumn}>
                             {this.state.tablesData}
                         </Menu>
                     </Sider>
@@ -301,7 +335,7 @@ class SqlPage extends React.Component {
                             <Content style={{ background: 'white' }}>
                                 <Table
                                     columns={this.state.columns}
-                                    rowKey={record => record._no}
+                                    rowKey={record => record.id}
                                     dataSource={this.state.data}
                                     pagination={this.state.pagination}
                                     loading={this.state.loading}
@@ -338,7 +372,17 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                         <TabPane tab="表结构" key="column">
-                            Content of Tab Pane 2
+                            <Content style={{ background: 'white' }}>
+                                <Table
+                                    columns={this.state.tableColumns}
+                                    rowKey={record => record.id}
+                                    dataSource={this.state.columnData}
+                                    loading={this.state.columnLoading}
+                                    bordered
+                                    scroll={{x : true}}
+                                    size="middle"
+                                />
+                            </Content>
                         </TabPane>
                         <TabPane tab="表索引" key="index">
                             Content of Tab Pane 2
