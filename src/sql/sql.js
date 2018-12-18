@@ -137,7 +137,11 @@ class SqlPage extends React.Component {
     };
 
     getAllTables = () => {
-        this.setState({ siderLoading: true });
+        this.setState({
+            tablesData: <Menu.Item key={'loading'} disabled={true}>
+                            <span style={{color: 'white'}}>loading...</span>
+                        </Menu.Item>
+        });
         reqwest({
             url: 'http://' + url + '/exec?_mt=sql.getAllTables',
             method: 'post',
@@ -159,10 +163,22 @@ class SqlPage extends React.Component {
             }
         }, (err, msg) => {
             openNotification(msg);
-        }).always(() => {
-            this.setState({
-                siderLoading: false,
-            });
+        });
+    };
+
+    exportSql = (params = {}) => {
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=sql.exportSql',
+            method: 'get',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                ...params,
+            },
+        }).then((data) => {
+            alert(data);
+        }, (err, msg) => {
+            openNotification(msg);
         });
     };
 
@@ -224,6 +240,22 @@ class SqlPage extends React.Component {
 
     enterLoading = () => {
         this.setState({ buttonLoading: true });
+        let sql = this.getSql();
+        if (!sql) {
+            return;
+        }
+        this.fetch({sql : sql});
+    };
+
+    clickExportSql = () => {
+        let sql = this.getSql();
+        if (!sql) {
+            return;
+        }
+        this.exportSql({sql : sql});
+    };
+
+    getSql = () => {
         const editor = this.refs.editorSql.getCodeMirror();
         let sql = editor.getSelection();
         if (sql === '') {
@@ -234,7 +266,7 @@ class SqlPage extends React.Component {
             openNotification("请输入sql");
             return;
         }
-        this.fetch({sql : sql});
+        return sql;
     };
 
     render() {
@@ -242,7 +274,7 @@ class SqlPage extends React.Component {
             this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Layout>
-                    <Sider width={'25%'} style={{height: '60vh', overflow: 'auto'}}>
+                    <Sider width={'25%'} style={{ height: '388px', overflow: 'auto'}}>
                         <Menu theme="dark">
                             {this.state.tablesData}
                         </Menu>
@@ -256,16 +288,17 @@ class SqlPage extends React.Component {
                                 执行（CTRL+ENTER）
                             </Button>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Button type="primary" size={'large'}>
+                            <Button type="primary" onClick={this.clickExportSql} size={'large'}>
                                 导出
                             </Button>
                         </Footer>
                     </Layout>
                 </Layout>
+                <br/>
                 <Layout>
-                    <Tabs onChange={console.log()}>
-                        <TabPane tab="执行" key="1">
-                            <Content style={{ background: '#FFFFFF' }}>
+                    <Tabs>
+                        <TabPane tab="执行" key="exec">
+                            <Content style={{ background: 'white' }}>
                                 <Table
                                     columns={this.state.columns}
                                     rowKey={record => record._no}
@@ -304,7 +337,15 @@ class SqlPage extends React.Component {
                                 </Modal>
                             </Content>
                         </TabPane>
-                        <TabPane tab="表结构" key="2">Content of Tab Pane 2</TabPane>
+                        <TabPane tab="表结构" key="column">
+                            Content of Tab Pane 2
+                        </TabPane>
+                        <TabPane tab="表索引" key="index">
+                            Content of Tab Pane 2
+                        </TabPane>
+                        <TabPane tab="表数据" key="data">
+                            Content of Tab Pane 2
+                        </TabPane>
                     </Tabs>
                     <Footer style={{ textAlign: 'center' }}>
                         ©2018 Created by GSS
