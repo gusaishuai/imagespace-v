@@ -1,8 +1,11 @@
 import React from 'react';
+import {Redirect} from 'react-router-dom';
+
 import {Button, Layout, Menu, Modal, notification, Table, Tabs} from 'antd';
-import reqwest from 'reqwest';
 import 'antd/dist/antd.css';
-import './sql.css';
+
+import reqwest from 'reqwest';
+
 import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/sql/sql';
@@ -10,8 +13,9 @@ import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/hint/show-hint.js';
 import 'codemirror/addon/hint/sql-hint.js';
 import 'codemirror/theme/darcula.css';
+
+import './sql.css';
 import url from '../config.js';
-import {Redirect} from 'react-router-dom';
 
 const codemirrorOptions={
     lineNumbers: true,
@@ -23,10 +27,12 @@ const codemirrorOptions={
 };
 
 const {
-    Header, Footer, Sider, Content,
+    Footer, Sider, Content,
 } = Layout;
 
 const TabPane = Tabs.TabPane;
+
+const confirm = Modal.confirm;
 
 const transposeColumns = [{
     dataIndex: 'k',
@@ -36,7 +42,7 @@ const transposeColumns = [{
     dataIndex: 'v',
 }];
 
-const openNotification = (msg) => {
+const openError = (msg) => {
     notification.error({
         message: '执行失败',
         description: msg,
@@ -47,134 +53,82 @@ class SqlPage extends React.Component {
 
     state = {
         noLoginRedirect: false,
-
-        data: [],
-        pagination: {},
-        loading: false,
-
-        visible: false,
-        dataRow: [],
-        columns: [],
-
-        buttonLoading: false,
         
-        tablesData: [],
-        siderLoading: false,
+        dataRow: [],
+        
+        buttonLoading: false,
 
-        tableColumns: [],
+        allTables: [],
+
+        execData: [],
+        execColumn: [],
+        execLoading: false,
+        execPagination: {},
+        execTransposeVisible: false,
+
         columnData: [],
+        columnColumn: [],
         columnLoading: false,
+
+        indexData: [],
+        indexColumn: [],
+        indexLoading: false,
+
+        limitData: [],
+        limitColumn: [],
+        limitLoading: false,
+        limitPagination: {},
+        limitTransposeVisible: false,
     };
 
-    showModal = (row) => {
-        this.setState({
-            visible: true,
-            dataRow: this.handleArray(row),
-        });
-    };
+    componentDidMount() {
+        document.addEventListener("keydown", this.ctrlEnter);
+        this.getAllTables();
+    }
 
-    handleOk = () => {
-        this.setState({
-            visible: false,
-        });
-    };
-
-    handleCancel = () => {
-        this.setState({
-            visible: false,
-        });
-    };
-
-    handleTableChange = (pagination) => {
-        const pager = { ...this.state.pagination };
-        pager.current = pagination.current;
-        this.setState({
-            pagination: pager,
-        });
-
-        //TODO
+    //codemirror中获取sql
+    getSql = () => {
         const editor = this.refs.editorSql.getCodeMirror();
         let sql = editor.getSelection();
         if (sql === '') {
             sql = editor.getValue();
         }
-        this.fetch({
-            sql: sql,
-            pageNo: pagination.current,
-        });
+        if (sql === '') {
+            this.setState({ buttonLoading: false });
+            openError("请输入sql");
+            return;
+        }
+        return sql;
     };
 
-    fetch = (params = {}) => {
-        this.setState({ loading: true });
-        reqwest({
-            url: 'http://' + url + '/exec?_mt=sql.execSql',
-            method: 'post',
-            crossOrigin: true,
-            withCredentials: true,
-            data: {
-                ...params,
-            },
-            type: 'json',
-        }).then((data) => {
-            if (data.code === 1001) {
-                this.setState({ noLoginRedirect: true });
-            } else if (data.code !== 0) {
-                openNotification(data.msg);
-            } else {
-                const pagination = {...this.state.pagination};
-                pagination.total = data.result.pagination.totalCount;
-                this.setState({
-                    data: data.result.resultList,
-                    columns: this.changeColumns(data.result.resultList),
-                    pagination,
-                });
+    //接口返回数据是否正确
+    checkSuccess = (data) => {
+        if (data.code === 1001) {
+            this.setState({ noLoginRedirect: true });
+        } else if (data.code !== 0) {
+            openError(data.msg);
+        } else {
+            return true;
+        }
+    };
+
+    //ctrl+enter事件-执行sql
+    ctrlEnter = (e) => {
+        if (e.ctrlKey && e.keyCode === 13) {
+            let sql = this.getSql();
+            if (!sql) {
+                return;
             }
-        }, (err, msg) => {
-            openNotification(msg);
-        }).always(() => {
-            this.setState({
-                loading: false,
-                buttonLoading: false
-            });
-        });
+            this.execSql(sql);
+        }
     };
 
-    tableColumn = (e) => {
-        this.setState({ columnLoading: true });
-        reqwest({
-            url: 'http://' + url + '/exec?_mt=sql.getColumn',
-            method: 'post',
-            crossOrigin: true,
-            withCredentials: true,
-            data: {
-                'table': e.key,
-            },
-            type: 'json',
-        }).then((data) => {
-            if (data.code === 1001) {
-                this.setState({ noLoginRedirect: true });
-            } else if (data.code !== 0) {
-                openNotification(data.msg);
-            } else {
-                this.setState({
-                    columnData: data.result,
-                    tableColumns: this.changeColumns(data.result),
-                });
-            }
-        }, (err, msg) => {
-            openNotification(msg);
-        }).always(() => {
-            this.setState({
-                columnLoading: false,
-            });
-        });
-    };
-
+    //获取所有表
     getAllTables = () => {
         this.setState({
-            tablesData: <Menu.Item key={'loading'} disabled={true}>
-                            <span style={{color: 'white'}}>loading...</span>
-                        </Menu.Item>
+            allTables: <Menu.Item key={'loading'} disabled={true}>
+                <span style={{ color: 'white' }}>loading...</span>
+            </Menu.Item>
         });
         reqwest({
             url: 'http://' + url + '/exec?_mt=sql.getAllTables',
@@ -183,64 +137,22 @@ class SqlPage extends React.Component {
             withCredentials: true,
             type: 'json',
         }).then((data) => {
-            if (data.code === 1001) {
-                this.setState({ noLoginRedirect: true });
-            } else if (data.code !== 0) {
-                openNotification(data.msg);
-            } else {
+            if (this.checkSuccess(data)) {
                 this.setState({
-                    tablesData: data.result.map(d =>
+                    allTables: data.result.map(d =>
                         <Menu.Item key={d}>
                             <span>{d}</span>
                         </Menu.Item>
-                ) });
+                    )
+                });
             }
         }, (err, msg) => {
-            openNotification(msg);
+            openError(msg);
         });
     };
-
-    exportSql = (params = {}) => {
-        reqwest({
-            url: 'http://' + url + '/exec?_mt=sql.exportSql',
-            method: 'get',
-            crossOrigin: true,
-            withCredentials: true,
-            data: {
-                ...params,
-            },
-        }).then((data) => {
-            alert(data);
-        }, (err, msg) => {
-            openNotification(msg);
-        });
-    };
-
-    componentDidMount() {
-        document.addEventListener("keydown", this.onKeyDown);
-        this.fetch({sql : "select * from t_user"});
-        this.getAllTables();
-    }
-
-    onKeyDown = (e) => {
-        //ctrl+enter
-        if (e.ctrlKey && e.keyCode === 13) {
-            this.setState({ buttonLoading: true });
-            const editor = this.refs.editorSql.getCodeMirror();
-            let sql = editor.getSelection();
-            if (sql === '') {
-                sql = editor.getValue();
-            }
-            if (sql === '') {
-                this.setState({ buttonLoading: false });
-                openNotification("请输入sql");
-                return;
-            }
-            this.fetch({sql : sql});
-        }
-    };
-
-    changeColumns = (data) => {
+    
+    //返回list中获取列名
+    getColumn = (data) => {
         let dataRows = [];
         let k = 0;
         for (let j in data[0]) {
@@ -253,13 +165,140 @@ class SqlPage extends React.Component {
         return dataRows;
     };
 
-    onRowClick1 = (rowKeys) => {
+    //点击-执行sql
+    clickExecSql = () => {
+        let sql = this.getSql();
+        if (!sql) {
+            return;
+        }
+        this.execSql(sql);
+    };
+    
+    //执行sql
+    execSql = (sql, pageNo) => {
+        this.setState({
+            execLoading: true,
+            buttonLoading: true
+        });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=sql.execSql',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'sql' : sql,
+                'pageNo': pageNo
+            },
+            type: 'json',
+        }).then((data) => {
+            if (this.checkSuccess(data)) {
+                const execPagination = this.state.execPagination;
+                execPagination.total = data.result.pagination.totalCount;
+                this.setState({
+                    execData: data.result.resultList,
+                    execColumn: this.getColumn(data.result.resultList),
+                    execPagination,
+                });
+            }
+        }, (err, msg) => {
+            openError(msg);
+        }).always(() => {
+            this.setState({
+                execLoading: false,
+                buttonLoading: false
+            });
+        });
+    };
+
+    //导出sql数据
+    clickExportSql = () => {
+        let sql = this.getSql();
+        if (!sql) {
+            return;
+        }
+        confirm({
+            title: '确认导出吗？',
+            content: '此操作将导出该sql查询到的所有数据',
+            okText: '确认',
+            cancelText: '取消',
+            onOk() {
+                window.location.href = 'http://' + url + '/exec?_mt=sql.exportSql&sql=' + sql;
+            }
+        });
+    };
+
+    //获取表结构信息
+    getTableInfo = (e) => {
+        this.tableColumn(e);
+        this.tableIndex(e);
+    };
+
+    //表列名
+    tableColumn = (e) => {
+        this.setState({ columnLoading: true });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=sql.getColumn',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'table': e.key,
+            },
+            type: 'json',
+        }).then((data) => {
+            if (this.checkSuccess(data)) {
+                this.setState({
+                    columnData: data.result,
+                    columnColumn: this.getColumn(data.result),
+                });
+            }
+        }, (err, msg) => {
+            openError(msg);
+        }).always(() => {
+            this.setState({ columnLoading: false });
+        });
+    };
+
+    //表索引
+    tableIndex = (e) => {
+        this.setState({ indexLoading: true });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=sql.getIndex',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'table': e.key,
+            },
+            type: 'json',
+        }).then((data) => {
+            if (this.checkSuccess(data)) {
+                this.setState({
+                    indexData: data.result,
+                    indexColumn: this.getColumn(data.result),
+                });
+            }
+        }, (err, msg) => {
+            openError(msg);
+        }).always(() => {
+            this.setState({ indexLoading: false });
+        });
+    };
+
+    //执行sql后，数据的双击事件
+    execOnRowDoubleClick = (row) => {
         return {
-            onDoubleClick : () => {this.showModal(rowKeys)},
+            onDoubleClick : () => {
+                this.setState({
+                    execTransposeVisible: true,
+                    dataRow: this.transposeRow(row),
+                });
+            },
         }
     };
 
-    handleArray = (row) => {
+    //行转列
+    transposeRow = (row) => {
         let dataRow = [];
         let j = 0;
         for (let i in row) {
@@ -272,53 +311,47 @@ class SqlPage extends React.Component {
         return dataRow;
     };
 
-    enterLoading = () => {
-        this.setState({ buttonLoading: true });
+    //行转列后确认
+    execTransposeClose = () => {
+        this.setState({
+            execTransposeVisible: false,
+        });
+    };
+
+    //翻页
+    execTableChange = (pagination) => {
+        const currentPagination = {...this.state.execPagination};
+        currentPagination.current = pagination.current;
+        this.setState({
+            execPagination: currentPagination,
+        });
+        //TODO
         let sql = this.getSql();
         if (!sql) {
             return;
         }
-        this.fetch({sql : sql});
-    };
-
-    clickExportSql = () => {
-        let sql = this.getSql();
-        if (!sql) {
-            return;
-        }
-        window.location.href = 'http://' + url + '/exec?_mt=sql.exportSql&sql=' + sql;
-    };
-
-    getSql = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
-        let sql = editor.getSelection();
-        if (sql === '') {
-            sql = editor.getValue();
-        }
-        if (sql === '') {
-            this.setState({ buttonLoading: false });
-            openNotification("请输入sql");
-            return;
-        }
-        return sql;
+        this.execSql({
+            sql: sql,
+            pageNo: pagination.current,
+        });
     };
 
     render() {
         return (
-            this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
+            this.state.noLoginRedirect ? <Redirect to={{ pathname:"/login" }} /> :
             <div>
                 <Layout>
-                    <Sider width={'25%'} style={{ height: '388px', overflow: 'auto'}}>
-                        <Menu theme="dark" onClick={this.tableColumn}>
-                            {this.state.tablesData}
+                    <Sider width={'25%'} className="all-table-menu">
+                        <Menu theme="dark" onClick={this.getTableInfo}>
+                            {this.state.allTables}
                         </Menu>
                     </Sider>
-                    <Layout width={'75%'} style={{ paddingLeft: '1%' }}>
+                    <Layout width={'75%'} className="code-mirror-layout">
                         <Content>
                             <CodeMirror ref="editorSql" options={codemirrorOptions} />
                         </Content>
                         <Footer align="right">
-                            <Button type="primary" loading={this.state.buttonLoading} onClick={this.enterLoading} size={'large'}>
+                            <Button type="primary" loading={this.state.buttonLoading} onClick={this.clickExecSql} size={'large'}>
                                 执行（CTRL+ENTER）
                             </Button>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -332,28 +365,27 @@ class SqlPage extends React.Component {
                 <Layout>
                     <Tabs>
                         <TabPane tab="执行" key="exec">
-                            <Content style={{ background: 'white' }}>
+                            <Content className="tabs-content">
                                 <Table
-                                    columns={this.state.columns}
+                                    columns={this.state.execColumn}
                                     rowKey={record => record.id}
-                                    dataSource={this.state.data}
-                                    pagination={this.state.pagination}
-                                    loading={this.state.loading}
-                                    onChange={this.handleTableChange}
+                                    dataSource={this.state.execData}
+                                    pagination={this.state.execPagination}
+                                    loading={this.state.execLoading}
+                                    onChange={this.execTableChange}
                                     bordered
-                                    onRow={this.onRowClick1}
+                                    onRow={this.execOnRowDoubleClick}
                                     scroll={{x : true}}
                                     size="middle"
                                 />
-
                                 <Modal
                                     title = '列块显示'
-                                    visible={this.state.visible}
-                                    onOk={this.handleOk}
-                                    onCancel={this.handleCancel}
+                                    visible={this.state.execTransposeVisible}
+                                    onOk={this.execTransposeClose}
+                                    onCancel={this.execTransposeClose}
                                     width = {'50%'}
                                     footer={
-                                        <Button type="primary" onClick={this.handleOk}>
+                                        <Button type="primary" onClick={this.execTransposeClose}>
                                             确认
                                         </Button>
                                     }
@@ -372,10 +404,10 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                         <TabPane tab="表结构" key="column">
-                            <Content style={{ background: 'white' }}>
+                            <Content className="tabs-content">
                                 <Table
-                                    columns={this.state.tableColumns}
-                                    rowKey={record => record.id}
+                                    columns={this.state.columnColumn}
+                                    rowKey={record => record.列名}
                                     dataSource={this.state.columnData}
                                     loading={this.state.columnLoading}
                                     bordered
@@ -385,10 +417,20 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                         <TabPane tab="表索引" key="index">
-                            Content of Tab Pane 2
+                            <Content className="tabs-content">
+                                <Table
+                                    columns={this.state.indexColumn}
+                                    rowKey={record => record.索引名}
+                                    dataSource={this.state.indexData}
+                                    loading={this.state.indexLoading}
+                                    bordered
+                                    scroll={{x : true}}
+                                    size="middle"
+                                />
+                            </Content>
                         </TabPane>
-                        <TabPane tab="表数据" key="data">
-                            Content of Tab Pane 2
+                        <TabPane tab="表数据" key="limit">
+                            132
                         </TabPane>
                     </Tabs>
                     <Footer style={{ textAlign: 'center' }}>
