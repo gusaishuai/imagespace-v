@@ -1,7 +1,7 @@
 import React from 'react';
 import {Redirect} from 'react-router-dom';
 
-import {Button, Layout, Menu, Modal, notification, Table, Tabs, Tag} from 'antd';
+import {Button, Layout, Menu, Modal, notification, Table, Tabs} from 'antd';
 import 'antd/dist/antd.css';
 
 import reqwest from 'reqwest';
@@ -27,7 +27,7 @@ const codemirrorOptions={
 };
 
 const {
-    Header, Footer, Sider, Content,
+    Footer, Sider, Content,
 } = Layout;
 
 const TabPane = Tabs.TabPane;
@@ -157,6 +157,7 @@ class SqlPage extends React.Component {
     //点击-执行sql
     clickExecSql = () => {
         const editor = this.refs.editorSql.getCodeMirror();
+        localStorage.setItem('allSql', editor.getValue());
         let sql = editor.getSelection();
         if (sql === '') {
             sql = editor.getValue();
@@ -166,7 +167,6 @@ class SqlPage extends React.Component {
             openError("请输入sql");
             return;
         }
-        localStorage.setItem('allSql', editor.getValue());
         localStorage.setItem('execSql', sql);
         this.execSql(sql);
     };
@@ -223,7 +223,24 @@ class SqlPage extends React.Component {
             okText: '确认',
             cancelText: '取消',
             onOk() {
-                window.open('http://' + url + '/exec?_mt=sql.exportSql&sql=' + sql);
+                //TODO
+                //TODO get请求很大
+                reqwest({
+                    url: 'http://' + url + '/exec?_mt=sql.exportSql&pre=pre',
+                    method: 'get',
+                    crossOrigin: true,
+                    withCredentials: true,
+                    data: {
+                        'sql': sql
+                    },
+                    type: 'json'
+                }).then((data) => {
+                    if (this.checkSuccess(data)) {
+                        window.open('http://' + url + '/exec?_mt=sql.exportSql&sql=' + sql);
+                    }
+                }, (err, msg) => {
+                    openError(msg);
+                });
             }
         });
     };
