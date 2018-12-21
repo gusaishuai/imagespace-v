@@ -1,7 +1,7 @@
 import React from 'react';
 import {Redirect} from 'react-router-dom';
 
-import {Button, Layout, Menu, Modal, notification, Table, Tabs} from 'antd';
+import {Button, Divider, Icon, Layout, Menu, Modal, notification, Table, Tabs, Tag} from 'antd';
 import 'antd/dist/antd.css';
 
 import reqwest from 'reqwest';
@@ -19,7 +19,6 @@ import url from '../config.js';
 
 const codemirrorOptions={
     lineNumbers: true,
-    lineSeparator: ' ',
     lineWrapping: true,
     mode: {name: "text/x-mysql"},
     extraKeys: {"Alt-/": "autocomplete"},
@@ -31,8 +30,6 @@ const {
 } = Layout;
 
 const TabPane = Tabs.TabPane;
-
-const confirm = Modal.confirm;
 
 const transposeColumns = [{
     dataIndex: 'k',
@@ -59,9 +56,14 @@ class SqlPage extends React.Component {
         buttonLoading: false,
         buttonDisabled: false,
 
+        exportButtonLoading: false,
+        exportButtonDisabled: false,
+
         allTables: [],
 
         selectedTable: '',
+
+        exportSqlVisible: false,
 
         execData: [],
         execColumn: [],
@@ -163,7 +165,6 @@ class SqlPage extends React.Component {
             sql = editor.getValue();
         }
         if (sql === '') {
-            this.setState({ buttonLoading: false });
             openError("请输入sql");
             return;
         }
@@ -210,6 +211,20 @@ class SqlPage extends React.Component {
         });
     };
 
+    //表数据 - 行转列后确认
+    exportSqlClose = () => {
+        this.setState({
+            exportSqlVisible: false
+        });
+    };
+
+    //导出确认框
+    confirmExportSql = () => {
+        this.setState({
+            exportSqlVisible: true
+        });
+    };
+
     //导出sql数据
     clickExportSql = () => {
         let sql = localStorage.getItem('execSql');
@@ -217,31 +232,32 @@ class SqlPage extends React.Component {
             openError("请输入sql");
             return;
         }
-        confirm({
-            title: '确认导出吗？',
-            content: '此操作将导出该sql查询到的所有数据',
-            okText: '确认',
-            cancelText: '取消',
-            onOk() {
-                //TODO
-                //TODO get请求很大
-                reqwest({
-                    url: 'http://' + url + '/exec?_mt=sql.exportSql&pre=pre',
-                    method: 'get',
-                    crossOrigin: true,
-                    withCredentials: true,
-                    data: {
-                        'sql': sql
-                    },
-                    type: 'json'
-                }).then((data) => {
-                    if (this.checkSuccess(data)) {
-                        window.open('http://' + url + '/exec?_mt=sql.exportSql&sql=' + sql);
-                    }
-                }, (err, msg) => {
-                    openError(msg);
-                });
+        this.setState({
+            exportButtonLoading: true,
+            exportButtonDisabled: true
+        });
+        reqwest({
+            //预检测
+            url: 'http://' + url + '/exec?_mt=sql.exportSql',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'sql': sql
+            },
+            type: 'json'
+        }).then((data) => {
+            if (this.checkSuccess(data)) {
+                window.open('http://' + url + '/exec?_mt=sql.exportSql&exportId=' + data.result);
             }
+        }, (err, msg) => {
+            openError(msg);
+        }).always(() => {
+            this.setState({
+                exportSqlVisible: false,
+                exportButtonLoading: false,
+                exportButtonDisabled: false
+            });
         });
     };
 
@@ -413,6 +429,36 @@ class SqlPage extends React.Component {
         this.tableLimit(this.state.selectedTable, pagination.current);
     };
 
+    //code mirror光标处插入select sql
+    selectHintTag = () => {
+        const editor = this.refs.editorSql.getCodeMirror();
+        editor.replaceSelection('select * from ');
+    };
+
+    //code mirror光标处插入select count sql
+    selectCountHintTag = () => {
+        const editor = this.refs.editorSql.getCodeMirror();
+        editor.replaceSelection('select count(1) from ');
+    };
+
+    //code mirror光标处插入insert sql
+    insertHintTag = () => {
+        const editor = this.refs.editorSql.getCodeMirror();
+        editor.replaceSelection('insert into  values ');
+    };
+
+    //code mirror光标处插入update sql
+    updateHintTag = () => {
+        const editor = this.refs.editorSql.getCodeMirror();
+        editor.replaceSelection('update  set  where ');
+    };
+
+    //code mirror光标处插入delete sql
+    deleteHintTag = () => {
+        const editor = this.refs.editorSql.getCodeMirror();
+        editor.replaceSelection('delete from ');
+    };
+
     render() {
         return (
             this.state.noLoginRedirect ? <Redirect to={{ pathname:"/login" }} /> :
@@ -424,24 +470,48 @@ class SqlPage extends React.Component {
                         </Menu>
                     </Sider>
                     <Layout width={'75%'} className="code-mirror-layout">
+                        <div style={{paddingBottom: '10px', paddingLeft: '30px'}}>
+                            <Tag color="magenta" onClick={this.selectHintTag}>select 语句</Tag>
+                            <Tag color="volcano" onClick={this.selectCountHintTag}>select count 语句</Tag>
+                            <Divider type="vertical" />
+                            <Tag color="green" onClick={this.insertHintTag}>insert 语句</Tag>
+                            <Tag color="blue" onClick={this.updateHintTag}>update 语句</Tag>
+                            <Tag color="purple" onClick={this.deleteHintTag}>delete 语句</Tag>
+                        </div>
                         <Content>
                             <CodeMirror ref="editorSql" options={codemirrorOptions} />
                         </Content>
                         <Footer align="right">
-                            <Button type="primary" loading={this.state.buttonLoading} disabled={this.state.buttonDisabled} onClick={this.clickExecSql} size={'large'}>
+                            <Button type="primary" loading={this.state.buttonLoading}
+                                    disabled={this.state.buttonDisabled} onClick={this.clickExecSql}>
                                 执行（CTRL+ENTER）
                             </Button>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Button type="primary" onClick={this.clickExportSql} size={'large'}>
+                            <Button type="primary" onClick={this.confirmExportSql}>
                                 导出
                             </Button>
+                            <Modal
+                                title="确认导出吗？"
+                                visible={this.state.exportSqlVisible}
+                                onCancel={this.exportSqlClose}
+                                footer={[
+                                    <Button key="cancel" onClick={this.exportSqlClose}>
+                                        取消
+                                    </Button>,
+                                    <Button key="confirm" type="primary" loading={this.state.exportButtonLoading}
+                                            disabled={this.state.exportButtonDisabled} onClick={this.clickExportSql}>
+                                        确认
+                                    </Button>
+                                ]}
+                            >
+                                <p>此操作将导出查询结果的所有数据</p>
+                            </Modal>
                         </Footer>
                     </Layout>
                 </Layout>
-                <br/>
                 <Layout>
                     <Tabs>
-                        <TabPane tab="执行" key="exec">
+                        <TabPane tab={<span><Icon type="copy" theme="filled" />执行</span>} key="exec">
                             <Content className="tabs-content">
                                 <Table
                                     columns={this.state.execColumn}
@@ -458,7 +528,6 @@ class SqlPage extends React.Component {
                                 <Modal
                                     title = '列块显示'
                                     visible={this.state.execTransposeVisible}
-                                    onOk={this.execTransposeClose}
                                     onCancel={this.execTransposeClose}
                                     width = {'50%'}
                                     footer={
@@ -480,7 +549,7 @@ class SqlPage extends React.Component {
                                 </Modal>
                             </Content>
                         </TabPane>
-                        <TabPane tab="表结构" key="column">
+                        <TabPane tab={<span><Icon type="tags" theme="filled" />表结构</span>} key="column">
                             <Content className="tabs-content">
                                 <Table
                                     columns={this.state.columnColumn}
@@ -493,7 +562,7 @@ class SqlPage extends React.Component {
                                 />
                             </Content>
                         </TabPane>
-                        <TabPane tab="表索引" key="index">
+                        <TabPane tab={<span><Icon type="tags" theme="filled" />表索引</span>} key="index">
                             <Content className="tabs-content">
                                 <Table
                                     columns={this.state.indexColumn}
@@ -506,7 +575,7 @@ class SqlPage extends React.Component {
                                 />
                             </Content>
                         </TabPane>
-                        <TabPane tab="表数据" key="limit">
+                        <TabPane tab={<span><Icon type="book" theme="filled" />表数据</span>} key="limit">
                             <Content className="tabs-content">
                                 <Table
                                     columns={this.state.limitColumn}
@@ -523,7 +592,6 @@ class SqlPage extends React.Component {
                                 <Modal
                                     title = '列块显示'
                                     visible={this.state.limitTransposeVisible}
-                                    onOk={this.limitTransposeClose}
                                     onCancel={this.limitTransposeClose}
                                     width = {'50%'}
                                     footer={
