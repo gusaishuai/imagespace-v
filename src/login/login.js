@@ -1,26 +1,17 @@
 import React from 'react';
-import {
-    Form, Icon, Input, Button, Layout, Row, Col, notification
-} from 'antd';
+import { Form, Icon, Input, Button, Layout, Row, Col } from 'antd';
+import 'antd/dist/antd.css';
 import { Redirect } from 'react-router-dom';
 import reqwest from 'reqwest';
 import md5 from 'md5-node';
-import 'antd/dist/antd.css';
+
 import './login.css';
-import url from '../config.js';
+import { url } from '../config.js';
+import { openError } from '../global.js';
 
 const FormItem = Form.Item;
 
-const {
-    Content, Footer, Header
-} = Layout;
-
-const errorNotification = (msg) => {
-    notification.error({
-        message: '登录失败',
-        description: msg,
-    });
-};
+const { Content, Footer, Header } = Layout;
 
 class LoginPage extends React.Component {
 
@@ -53,15 +44,15 @@ class LoginPage extends React.Component {
                     type: 'json',
                 }).then((data) => {
                     if (data.code === 0) {
-                        this.setState({ redirect: true });
+                        return <Redirect to={{pathname:"/menu"}} />;
                     } else {
                         //提示错误
-                        errorNotification(data.msg);
+                        openError(data.msg, '登录失败');
                         //重新获取验证码
                         this.getCaptcha();
                     }
                 }, (err, msg) => {
-                    errorNotification(msg);
+                    openError(msg, '登录失败');
                 }).always(() => {
                     this.setState({ buttonLoading: false });
                 });
@@ -76,7 +67,6 @@ class LoginPage extends React.Component {
     render() {
         const { getFieldDecorator } = this.props.form;
         return (
-            this.state.redirect ? <Redirect to={{pathname:"/menu"}} /> :
             <Layout style={{height: '100vh'}}>
                 <Header className="login-form-header" >GSS的想象空间</Header>
                 <Content align="right" style={{padding: "10%"}}>

@@ -1,11 +1,7 @@
 import React from 'react';
-import {Redirect} from 'react-router-dom';
-
-import {Button, Divider, Icon, Layout, Menu, Modal, notification, Table, Tabs, Tag} from 'antd';
+import {Button, Divider, Icon, Layout, Menu, Modal, Table, Tabs, Tag} from 'antd';
 import 'antd/dist/antd.css';
-
 import reqwest from 'reqwest';
-
 import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/sql/sql';
@@ -15,7 +11,8 @@ import 'codemirror/addon/hint/sql-hint.js';
 import 'codemirror/theme/darcula.css';
 
 import './sql.css';
-import url from '../config.js';
+import { url } from '../config.js';
+import { openError, validResp } from '../global.js';
 
 const codemirrorOptions={
     lineNumbers: true,
@@ -39,18 +36,9 @@ const transposeColumns = [{
     dataIndex: 'v',
 }];
 
-const openError = (msg) => {
-    notification.error({
-        message: '执行失败',
-        description: msg,
-    });
-};
-
 class SqlPage extends React.Component {
 
     state = {
-        noLoginRedirect: false,
-        
         dataRow: [],
         
         buttonLoading: false,
@@ -96,17 +84,6 @@ class SqlPage extends React.Component {
         this.getAllTables();
     }
 
-    //接口返回数据是否正确
-    checkSuccess = (data) => {
-        if (data.code === 1001) {
-            this.setState({ noLoginRedirect: true });
-        } else if (data.code !== 0) {
-            openError(data.msg);
-        } else {
-            return true;
-        }
-    };
-
     //ctrl+enter事件-执行sql
     ctrlEnter = (e) => {
         if (e.ctrlKey && e.keyCode === 13) {
@@ -128,15 +105,16 @@ class SqlPage extends React.Component {
             withCredentials: true,
             type: 'json',
         }).then((data) => {
-            if (this.checkSuccess(data)) {
-                this.setState({
-                    allTables: data.result.map(d =>
-                        <Menu.Item key={d}>
-                            <span>{d}</span>
-                        </Menu.Item>
-                    )
-                });
+            if (validResp(data) !== true) {
+                return;
             }
+            this.setState({
+                allTables: data.result.map(d =>
+                    <Menu.Item key={d}>
+                        <span>{d}</span>
+                    </Menu.Item>
+                )
+            });
         }, (err, msg) => {
             openError(msg);
         });
@@ -190,16 +168,17 @@ class SqlPage extends React.Component {
             },
             type: 'json',
         }).then((data) => {
-            if (this.checkSuccess(data)) {
-                const execPagination = this.state.execPagination;
-                execPagination.total = data.result.pagination.totalCount;
-                execPagination.pageSize = data.result.pagination.pageSize;
-                this.setState({
-                    execData: data.result.resultList,
-                    execColumn: this.getColumn(data.result.resultList),
-                    execPagination: execPagination,
-                });
+            if (validResp(data) !== true) {
+                return;
             }
+            const execPagination = this.state.execPagination;
+            execPagination.total = data.result.pagination.totalCount;
+            execPagination.pageSize = data.result.pagination.pageSize;
+            this.setState({
+                execData: data.result.resultList,
+                execColumn: this.getColumn(data.result.resultList),
+                execPagination: execPagination,
+            });
         }, (err, msg) => {
             openError(msg);
         }).always(() => {
@@ -247,7 +226,7 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (this.checkSuccess(data)) {
+            if (validResp(data) === true) {
                 window.open('http://' + url + '/exec?_mt=sql.exportSql&exportId=' + data.result);
             }
         }, (err, msg) => {
@@ -282,12 +261,13 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (this.checkSuccess(data)) {
-                this.setState({
-                    columnData: data.result,
-                    columnColumn: this.getColumn(data.result),
-                });
+            if (validResp(data) !== true) {
+                return;
             }
+            this.setState({
+                columnData: data.result,
+                columnColumn: this.getColumn(data.result),
+            });
         }, (err, msg) => {
             openError(msg);
         }).always(() => {
@@ -308,12 +288,13 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (this.checkSuccess(data)) {
-                this.setState({
-                    indexData: data.result,
-                    indexColumn: this.getColumn(data.result),
-                });
+            if (validResp(data) !== true) {
+                return;
             }
+            this.setState({
+                indexData: data.result,
+                indexColumn: this.getColumn(data.result),
+            });
         }, (err, msg) => {
             openError(msg);
         }).always(() => {
@@ -335,16 +316,17 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (this.checkSuccess(data)) {
-                const limitPagination = this.state.limitPagination;
-                limitPagination.total = data.result.pagination.totalCount;
-                limitPagination.pageSize = data.result.pagination.pageSize;
-                this.setState({
-                    limitData: data.result.resultList,
-                    limitColumn: this.getColumn(data.result.resultList),
-                    limitPagination: limitPagination,
-                });
+            if (validResp(data) !== true) {
+                return;
             }
+            const limitPagination = this.state.limitPagination;
+            limitPagination.total = data.result.pagination.totalCount;
+            limitPagination.pageSize = data.result.pagination.pageSize;
+            this.setState({
+                limitData: data.result.resultList,
+                limitColumn: this.getColumn(data.result.resultList),
+                limitPagination: limitPagination,
+            });
         }, (err, msg) => {
             openError(msg);
         }).always(() => {
@@ -461,7 +443,6 @@ class SqlPage extends React.Component {
 
     render() {
         return (
-            this.state.noLoginRedirect ? <Redirect to={{ pathname:"/login" }} /> :
             <div>
                 <Layout>
                     <Sider width={'25%'} className="all-table-menu">
@@ -470,7 +451,7 @@ class SqlPage extends React.Component {
                         </Menu>
                     </Sider>
                     <Layout width={'75%'} className="code-mirror-layout">
-                        <div style={{paddingBottom: '10px', paddingLeft: '30px'}}>
+                        <div className="tag-div">
                             <Tag color="magenta" onClick={this.selectHintTag}>select 语句</Tag>
                             <Tag color="volcano" onClick={this.selectCountHintTag}>select count 语句</Tag>
                             <Divider type="vertical" />
