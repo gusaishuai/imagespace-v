@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert } from 'antd';
+import {Alert} from 'antd';
 import 'antd/dist/antd.css';
 
 class EmptyPage extends React.Component {

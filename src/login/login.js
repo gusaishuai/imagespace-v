@@ -1,13 +1,13 @@
 import React from 'react';
-import { Form, Icon, Input, Button, Layout, Row, Col } from 'antd';
+import {Button, Col, Form, Icon, Input, Layout, Row} from 'antd';
 import 'antd/dist/antd.css';
-import { Redirect } from 'react-router-dom';
+import {Redirect} from 'react-router-dom';
 import reqwest from 'reqwest';
 import md5 from 'md5-node';
 
 import './login.css';
-import { url } from '../config.js';
-import { openError } from '../global.js';
+import {url} from '../config.js';
+import {openErrorNotify} from '../global.js';
 
 const FormItem = Form.Item;
 
@@ -23,7 +23,19 @@ class LoginPage extends React.Component {
     };
 
     componentDidMount() {
-        this.getCaptcha();
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=login.checkDirectLogin',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            type: 'json',
+        }).then((data) => {
+            if (data.code === 0) {
+                this.setState({ redirect: true });
+            } else {
+                this.getCaptcha();
+            }
+        });
     }
 
     checkUser = (e) => {
@@ -39,20 +51,20 @@ class LoginPage extends React.Component {
                     data: {
                         'userName': values.userName,
                         'password': md5(values.password),
-                        'captcha': values.captcha,
+                        'captcha': values.captcha
                     },
                     type: 'json',
                 }).then((data) => {
                     if (data.code === 0) {
-                        return <Redirect to={{pathname:"/menu"}} />;
+                        this.setState({ redirect: true });
                     } else {
                         //提示错误
-                        openError(data.msg, '登录失败');
+                        openErrorNotify(data.msg, '登录失败');
                         //重新获取验证码
                         this.getCaptcha();
                     }
                 }, (err, msg) => {
-                    openError(msg, '登录失败');
+                    openErrorNotify(msg, '登录失败');
                 }).always(() => {
                     this.setState({ buttonLoading: false });
                 });
@@ -67,6 +79,7 @@ class LoginPage extends React.Component {
     render() {
         const { getFieldDecorator } = this.props.form;
         return (
+            this.state.redirect ? <Redirect to={{pathname:"/menu"}} /> :
             <Layout style={{height: '100vh'}}>
                 <Header className="login-form-header" >GSS的想象空间</Header>
                 <Content align="right" style={{padding: "10%"}}>

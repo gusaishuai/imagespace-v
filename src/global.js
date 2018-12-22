@@ -1,9 +1,13 @@
-import React from 'react';
-import {Redirect} from 'react-router-dom';
-import { notification } from 'antd';
+import {notification} from 'antd';
 import 'antd/dist/antd.css';
 
-const openError = (desc, msg) => {
+global.respCode = {
+    success: 0,
+    //用户未登录
+    noLogin: 1001
+};
+
+const openErrorNotify = (desc, msg) => {
     if (!msg) {
         msg = '操作失败';
     }
@@ -13,16 +17,15 @@ const openError = (desc, msg) => {
     });
 };
 
-//接口返回数据是否正确
-const validResp = (data) => {
-    if (data.code === 1001) {
-        return <Redirect to={{ pathname:"/login" }} />;
-    } else if (data.code !== 0) {
-        openError(data.msg);
-    } else {
-        return true;
+const openSuccessNotify = (desc, msg) => {
+    if (!msg) {
+        msg = '操作成功';
     }
+    notification.success({
+        message: msg,
+        description: desc,
+    });
 };
 
-export { openError };
-export { validResp };
+export { openErrorNotify };
+export { openSuccessNotify };

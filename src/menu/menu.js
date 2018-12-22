@@ -1,23 +1,26 @@
 import React from 'react';
-import { Layout, Menu, Icon, Dropdown, Modal, Button, Form, Input } from 'antd';
+import {Button, Dropdown, Icon, Layout, Menu, Modal} from 'antd';
 import 'antd/dist/antd.css';
+import {Redirect} from 'react-router-dom';
 import reqwest from 'reqwest';
+import md5 from "md5-node";
 
 import SqlPage from '../sql/sql.js';
 import ExcelPage from "../excel/excel.js";
 import EmptyPage from "../empty/empty.js";
 
 import './menu.css'
-import { url } from '../config.js';
-import { openError, validResp } from '../global.js';
+import {url} from '../config.js';
+import {openErrorNotify, openSuccessNotify} from '../global.js';
+import ModifyPwdForm from './modifypwd/modifyPwd.js';
 
 const { Header, Sider, Content } = Layout;
-
-const FormItem = Form.Item;
 
 class MenuPage extends React.Component {
 
     state = {
+        noLoginRedirect: false,
+
         allMenu: {
             "sql": <SqlPage/>,
             "excel": <ExcelPage/>
@@ -32,7 +35,12 @@ class MenuPage extends React.Component {
         ownMenu: [],
 
         modifyPwdVisible: false,
-        modifyPwdClose: false
+        modifyPwdLoading: false,
+        modifyPwdDisable: false,
+
+        logoutVisible: false,
+        logoutLoading: false,
+        logoutDisable: false
     };
 
     componentDidMount() {
@@ -41,37 +49,40 @@ class MenuPage extends React.Component {
 
     getMenuList = () => {
         reqwest({
-            url: 'http://' + url + '/exec?_mt=login.getMenu',
+            url: 'http://' + url + '/exec?_mt=menu.getMenu',
             method: 'post',
             crossOrigin: true,
             withCredentials: true,
             type: 'json',
         }).then((data) => {
-            if (validResp(data) !== true) {
-                return;
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                this.setState({ nick: data.result.nick });
+                let menuList = data.result.menuList;
+                //没有任何菜单权限
+                if (!menuList || menuList.length === 0) {
+                    this.setState({ childPage: <EmptyPage/> });
+                    return;
+                }
+                let firstMenuRoute = menuList[0].route;
+                let selectMenuKey = [];
+                selectMenuKey.push(firstMenuRoute);
+                this.setState({
+                    selectMenuKey: selectMenuKey,
+                    childPage: this.state.allMenu[firstMenuRoute],
+                    ownMenu: menuList.map(d =>
+                        <Menu.Item key={d.route}>
+                            <Icon type={d.logo} />
+                            <span>{d.name}</span>
+                        </Menu.Item>
+                    )
+                });
             }
-            this.setState({ nick: data.result.nick });
-            let menuList = data.result.menuList;
-            //没有任何菜单权限
-            if (!menuList || menuList.length === 0) {
-                this.setState({ childPage: <EmptyPage/> });
-                return;
-            }
-            let firstMenuRoute = menuList[0].route;
-            let selectMenuKey = [];
-            selectMenuKey.push(firstMenuRoute);
-            this.setState({
-                selectMenuKey: selectMenuKey,
-                childPage: this.state.allMenu[firstMenuRoute],
-                ownMenu: menuList.map(d =>
-                    <Menu.Item key={d.route}>
-                        <Icon type={d.logo} />
-                        <span>{d.name}</span>
-                    </Menu.Item>
-                )
-            });
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         });
     };
 
@@ -94,26 +105,87 @@ class MenuPage extends React.Component {
             this.setState({ modifyPwdVisible: true });
         } else if (e.key === 'logout') {
             //登出
+            this.setState({ logoutVisible: true });
         }
     };
 
-    aaa = (e) => {
-        alert(2);
-        e.preventDefault();
-        this.props.form.validateFields((err, values) => {
+    modifyPwd = () => {
+        this.refs.modifyPwdForm.validateFields((err, values) => {
             if (!err) {
-                alert(1);
+                this.setState({
+                    modifyPwdLoading: true,
+                    modifyPwdDisable: true
+                });
+                reqwest({
+                    url: 'http://' + url + '/exec?_mt=menu.modifyPwd',
+                    method: 'post',
+                    crossOrigin: true,
+                    withCredentials: true,
+                    data: {
+                        'oldPassword': md5(values.oldPassword),
+                        'newPassword': md5(values.newPassword)
+                    },
+                    type: 'json',
+                }).then((data) => {
+                    if (data.code === global.respCode.noLogin) {
+                        this.setState({ noLoginRedirect: true });
+                    } else if (data.code !== global.respCode.success) {
+                        openErrorNotify(data.msg);
+                    } else {
+                        openSuccessNotify('密码修改成功');
+                        this.setState({ modifyPwdVisible: false });
+                    }
+                }, (err, msg) => {
+                    openErrorNotify(msg);
+                }).always(() => {
+                    this.setState({
+                        modifyPwdLoading: false,
+                        modifyPwdDisable: false
+                    });
+                });
             }
         });
     };
 
     modifyPwdClose = () => {
-        this.setState({ modifyPwdClose: true });
+        this.setState({ modifyPwdVisible: false });
+    };
+
+    logout = () => {
+        this.setState({
+            logoutLoading: true,
+            logoutDisable: true
+        });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=menu.logout',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            type: 'json',
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin || data.code === global.respCode.success) {
+                this.setState({ noLoginRedirect: true });
+            } else {
+                openErrorNotify(data.msg);
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        }).always(() => {
+            this.setState({
+                logoutVisible: false,
+                logoutLoading: false,
+                logoutDisable: false,
+            });
+        });
+    };
+
+    logoutClose = () => {
+        this.setState({ logoutVisible: false });
     };
 
     render() {
-        const { getFieldDecorator } = this.props.form;
         return (
+            this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <Layout style={{height: '100vh'}}>
                 <Sider trigger={null}
                        collapsible
@@ -134,7 +206,7 @@ class MenuPage extends React.Component {
                                 <Menu onClick={this.dropDownMenuClick}>
                                     <Menu.Item key="modifyPwd"><Icon type="lock" />修改密码</Menu.Item>
                                     <Menu.Divider />
-                                    <Menu.Item key="logout"><Icon type="logout" />退出</Menu.Item>
+                                    <Menu.Item key="logout"><Icon type="logout" />登出</Menu.Item>
                                 </Menu>
                             } trigger={['click']}>
                                 <a className="ant-dropdown-link" href="#">
@@ -148,41 +220,32 @@ class MenuPage extends React.Component {
                             visible={this.state.modifyPwdVisible}
                             onCancel={this.modifyPwdClose}
                             footer={[
-                                <Button type="primary" htmlType="submit">
-                                    确认
-                                </Button>,
                                 <Button key="cancel" onClick={this.modifyPwdClose}>
                                     取消
+                                </Button>,
+                                <Button key="confirm" type="primary" loading={this.state.modifyPwdLoading}
+                                        disabled={this.state.modifyPwdDisable} onClick={this.modifyPwd}>
+                                    确认
                                 </Button>
                             ]}
                         >
-                            <Form onSubmit={this.aaa}>
-                                <FormItem>
-                                    {getFieldDecorator('oldPassword', {
-                                        rules: [{ required: true, message: '请输入原密码' }],
-                                    })(
-                                        <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="原密码" />
-                                    )}
-                                </FormItem>
-                                <FormItem>
-                                    {getFieldDecorator('newPassword', {
-                                        rules: [
-                                            { required: true, message: '请输入新密码' },
-                                            { pattern: '(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[^0-9A-Za-z])([0-9A-Za-z]|[^0-9A-Za-z]){8,18}',
-                                                message: '密码必须同时包含大、小写字母、数字和特殊字符，长度8~18位' }
-                                        ],
-                                    })(
-                                        <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="新密码" />
-                                    )}
-                                </FormItem>
-                                <FormItem>
-                                    {getFieldDecorator('newPasswordAgain', {
-                                        rules: [{ required: true, message: '请重新输入新密码' }],
-                                    })(
-                                        <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="重新输入新密码" />
-                                    )}
-                                </FormItem>
-                            </Form>
+                            <ModifyPwdForm ref="modifyPwdForm"/>
+                        </Modal>
+                        <Modal
+                            title="确认登出吗？"
+                            visible={this.state.logoutVisible}
+                            onCancel={this.logoutClose}
+                            footer={[
+                                <Button key="cancel" onClick={this.logoutClose}>
+                                    取消
+                                </Button>,
+                                <Button key="confirm" type="primary" loading={this.state.logoutLoading}
+                                        disabled={this.state.logoutDisable} onClick={this.logout}>
+                                    确认
+                                </Button>
+                            ]}
+                        >
+                            <p>如需切换账号请登出</p>
                         </Modal>
                     </Header>
                     <Content style={{ margin: '1% 1%' }} >
@@ -194,4 +257,4 @@ class MenuPage extends React.Component {
     }
 }
 
-export default Form.create()(MenuPage);
+export default MenuPage;

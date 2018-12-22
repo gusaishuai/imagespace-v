@@ -1,6 +1,7 @@
 import React from 'react';
 import {Button, Divider, Icon, Layout, Menu, Modal, Table, Tabs, Tag} from 'antd';
 import 'antd/dist/antd.css';
+import {Redirect} from 'react-router-dom';
 import reqwest from 'reqwest';
 import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css';
@@ -11,8 +12,8 @@ import 'codemirror/addon/hint/sql-hint.js';
 import 'codemirror/theme/darcula.css';
 
 import './sql.css';
-import { url } from '../config.js';
-import { openError, validResp } from '../global.js';
+import {url} from '../config.js';
+import {openErrorNotify} from '../global.js';
 
 const codemirrorOptions={
     lineNumbers: true,
@@ -39,6 +40,8 @@ const transposeColumns = [{
 class SqlPage extends React.Component {
 
     state = {
+        noLoginRedirect: false,
+
         dataRow: [],
         
         buttonLoading: false,
@@ -94,9 +97,10 @@ class SqlPage extends React.Component {
     //获取所有表
     getAllTables = () => {
         this.setState({
-            allTables: <Menu.Item key={'loading'} disabled={true}>
-                <span style={{ color: 'white' }}>loading...</span>
-            </Menu.Item>
+            allTables:
+                <Menu.Item key={'loading'} disabled={true}>
+                    <span style={{ color: 'white' }}>loading...</span>
+                </Menu.Item>
         });
         reqwest({
             url: 'http://' + url + '/exec?_mt=sql.getAllTables',
@@ -105,18 +109,21 @@ class SqlPage extends React.Component {
             withCredentials: true,
             type: 'json',
         }).then((data) => {
-            if (validResp(data) !== true) {
-                return;
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                this.setState({
+                    allTables: data.result.map(d =>
+                        <Menu.Item key={d}>
+                            <span>{d}</span>
+                        </Menu.Item>
+                    )
+                });
             }
-            this.setState({
-                allTables: data.result.map(d =>
-                    <Menu.Item key={d}>
-                        <span>{d}</span>
-                    </Menu.Item>
-                )
-            });
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         });
     };
     
@@ -143,7 +150,7 @@ class SqlPage extends React.Component {
             sql = editor.getValue();
         }
         if (sql === '') {
-            openError("请输入sql");
+            openErrorNotify("请输入sql");
             return;
         }
         localStorage.setItem('execSql', sql);
@@ -168,19 +175,22 @@ class SqlPage extends React.Component {
             },
             type: 'json',
         }).then((data) => {
-            if (validResp(data) !== true) {
-                return;
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                const execPagination = this.state.execPagination;
+                execPagination.total = data.result.pagination.totalCount;
+                execPagination.pageSize = data.result.pagination.pageSize;
+                this.setState({
+                    execData: data.result.resultList,
+                    execColumn: this.getColumn(data.result.resultList),
+                    execPagination: execPagination,
+                });
             }
-            const execPagination = this.state.execPagination;
-            execPagination.total = data.result.pagination.totalCount;
-            execPagination.pageSize = data.result.pagination.pageSize;
-            this.setState({
-                execData: data.result.resultList,
-                execColumn: this.getColumn(data.result.resultList),
-                execPagination: execPagination,
-            });
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         }).always(() => {
             this.setState({
                 execLoading: false,
@@ -208,7 +218,7 @@ class SqlPage extends React.Component {
     clickExportSql = () => {
         let sql = localStorage.getItem('execSql');
         if (!sql || sql.trim() === '') {
-            openError("请输入sql");
+            openErrorNotify("请输入sql");
             return;
         }
         this.setState({
@@ -226,11 +236,15 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (validResp(data) === true) {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
                 window.open('http://' + url + '/exec?_mt=sql.exportSql&exportId=' + data.result);
             }
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         }).always(() => {
             this.setState({
                 exportSqlVisible: false,
@@ -261,15 +275,18 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (validResp(data) !== true) {
-                return;
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                this.setState({
+                    columnData: data.result,
+                    columnColumn: this.getColumn(data.result),
+                });
             }
-            this.setState({
-                columnData: data.result,
-                columnColumn: this.getColumn(data.result),
-            });
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         }).always(() => {
             this.setState({ columnLoading: false });
         });
@@ -288,15 +305,18 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (validResp(data) !== true) {
-                return;
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                this.setState({
+                    indexData: data.result,
+                    indexColumn: this.getColumn(data.result),
+                });
             }
-            this.setState({
-                indexData: data.result,
-                indexColumn: this.getColumn(data.result),
-            });
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         }).always(() => {
             this.setState({ indexLoading: false });
         });
@@ -316,19 +336,22 @@ class SqlPage extends React.Component {
             },
             type: 'json'
         }).then((data) => {
-            if (validResp(data) !== true) {
-                return;
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                const limitPagination = this.state.limitPagination;
+                limitPagination.total = data.result.pagination.totalCount;
+                limitPagination.pageSize = data.result.pagination.pageSize;
+                this.setState({
+                    limitData: data.result.resultList,
+                    limitColumn: this.getColumn(data.result.resultList),
+                    limitPagination: limitPagination,
+                });
             }
-            const limitPagination = this.state.limitPagination;
-            limitPagination.total = data.result.pagination.totalCount;
-            limitPagination.pageSize = data.result.pagination.pageSize;
-            this.setState({
-                limitData: data.result.resultList,
-                limitColumn: this.getColumn(data.result.resultList),
-                limitPagination: limitPagination,
-            });
         }, (err, msg) => {
-            openError(msg);
+            openErrorNotify(msg);
         }).always(() => {
             this.setState({ limitLoading: false });
         });
@@ -395,7 +418,7 @@ class SqlPage extends React.Component {
         });
         let sql = localStorage.getItem('execSql');
         if (!sql || sql === '') {
-            openError("请输入sql");
+            openErrorNotify("请输入sql");
             return;
         }
         this.execSql(sql, pagination.current);
@@ -443,6 +466,7 @@ class SqlPage extends React.Component {
 
     render() {
         return (
+            this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Layout>
                     <Sider width={'25%'} className="all-table-menu">
@@ -463,12 +487,12 @@ class SqlPage extends React.Component {
                             <CodeMirror ref="editorSql" options={codemirrorOptions} />
                         </Content>
                         <Footer align="right">
-                            <Button type="primary" loading={this.state.buttonLoading}
+                            <Button type="primary" loading={this.state.buttonLoading} icon={'enter'}
                                     disabled={this.state.buttonDisabled} onClick={this.clickExecSql}>
                                 执行（CTRL+ENTER）
                             </Button>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Button type="primary" onClick={this.confirmExportSql}>
+                            <Button type="primary" icon={'export'} onClick={this.confirmExportSql}>
                                 导出
                             </Button>
                             <Modal
