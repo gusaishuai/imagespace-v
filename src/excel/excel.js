@@ -1,72 +1,96 @@
 import React from 'react';
-import {Icon, message, Upload} from 'antd';
+import {Button, message, Upload, Steps, Icon, Divider, Carousel} from 'antd';
+import reqwest from 'reqwest';
 
-import {url} from '../config.js';
-import reqwest from "reqwest";
+import {url} from "../config";
+import "./excel.css";
 
-const Dragger = Upload.Dragger;
+const Step = Steps.Step;
 
 class ExcelPage extends React.Component {
-
     state = {
         fileList: [],
+        uploading: false
     };
 
-    handleChange = (info) => {
-        let fileList = info.fileList.slice(-1);
-        this.setState({ fileList });
-
+    handleUpload = () => {
         const formData = new FormData();
-        fileList.forEach((file) => {   // fileList 是要上传的文件数组
+        this.state.fileList.forEach((file) => {
             formData.append('files[]', file);
         });
+        this.setState({ uploading: true });
         reqwest({
             url: 'http://' + url + '/exec?_mt=excel.uploadExcel',
             method: 'post',
             crossOrigin: true,
             withCredentials: true,
             processData: false,
-            data: formData
+            data: formData,
         }).then((data) => {
-            alert(JSON.stringify(data));
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                message.error('上传失败：' + data.msg);
+            } else {
+                this.setState({ fileList: [] });
+                message.success('上传成功');
+            }
+        }, (err, msg) => {
+            message.error('上传失败：' + msg);
+        }).always(() => {
+            this.setState({ uploading: false });
         });
-
-        const status = info.file.status;
-        if (status === 'done') {
-            message.success(`${info.file.name} 上传成功`);
-        } else if (status === 'error') {
-            message.error(`${info.file.name} 上传失败`);
-        }
     };
 
     render() {
-
+        const { uploading, fileList } = this.state;
         const props = {
-            name: 'file',
             accept: '.xls,.xlsx',
-            multiple: false,
-            // action: 'http://' + url + '/exec?_mt=excel.uploadExcel',
-            // withCredentials: true,
-            // headers: {
-            //     'Access-Control-Allow-Origin': '*',
-            //     'Access-Control-Allow-Credentials': 'true',
-            //     'Access-Control-Allow-Methods': "GET, POST, OPTIONS, PUT, DELETE",
-            //     'Access-Control-Allow-Headers': "content-type",
-            //     'Content-Type': "application/json; charset=utf-8"
-            // },
-            onChange: this.handleChange
+            onRemove: (file) => {
+                this.setState((state) => {
+                    const index = state.fileList.indexOf(file);
+                    const newFileList = state.fileList.slice();
+                    newFileList.splice(index, 1);
+                    return {
+                        fileList: newFileList,
+                    };
+                });
+            },
+            beforeUpload: (file) => {
+                this.setState(state => ({
+                    fileList: [...state.fileList, file],
+                }));
+                return false;
+            },
+            fileList
         };
 
         return (
-            <Dragger {...props} fileList={this.state.fileList}>
-                <p className="ant-upload-drag-icon">
-                    <Icon type="inbox" />
-                </p>
-                <p className="ant-upload-text">点击或拖动EXCEL到此区域进行上传</p>
-                <p className="ant-upload-hint">每次单个文件上传，第二次上传会把第一次上传的文件覆盖</p>
-            </Dragger>
+            <div>
+                <br/>
+                <Steps>
+                    <Step status="finish" title="上传或选择历史文件" icon={<Icon type="upload" />} />
+                    <Step status="finish" title="选择校验逻辑" icon={<Icon type="solution" />} />
+                    <Step status="process" title="查询" icon={<Icon type="loading" />} />
+                    <Step status="wait" title="Done" icon={<Icon type="smile-o" />} />
+                </Steps>
+                <Divider/>
+                <Upload {...props}>
+                    <Button icon={'upload'}>选择文件</Button>
+                </Upload>
+                <Button
+                    type="primary"
+                    onClick={this.handleUpload}
+                    disabled={fileList.length === 0}
+                    loading={uploading}
+                    style={{ marginTop: '1%' }}
+                >
+                    {uploading ? '上传中' : '开始上传' }
+                </Button>
+            </div>
         );
     }
 }
+
 
 export default ExcelPage;

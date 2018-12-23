@@ -30,7 +30,7 @@ class LoginPage extends React.Component {
             withCredentials: true,
             type: 'json',
         }).then((data) => {
-            if (data.code === 0) {
+            if (data.code === global.respCode.noLogin) {
                 this.setState({ redirect: true });
             } else {
                 this.getCaptcha();
@@ -55,7 +55,7 @@ class LoginPage extends React.Component {
                     },
                     type: 'json',
                 }).then((data) => {
-                    if (data.code === 0) {
+                    if (data.code === global.respCode.noLogin) {
                         this.setState({ redirect: true });
                     } else {
                         //提示错误
