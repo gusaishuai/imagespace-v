@@ -25,13 +25,8 @@ class ExcelPage extends React.Component {
             method: 'post',
             crossOrigin: true,
             withCredentials: true,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Credentials': 'true',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-            },
-            type: 'json',
-            body: formData
+            processData: false,
+            data: formData
         }).then((data) => {
             alert(JSON.stringify(data));
         });
@@ -51,10 +46,13 @@ class ExcelPage extends React.Component {
             accept: '.xls,.xlsx',
             multiple: false,
             // action: 'http://' + url + '/exec?_mt=excel.uploadExcel',
+            // withCredentials: true,
             // headers: {
             //     'Access-Control-Allow-Origin': '*',
             //     'Access-Control-Allow-Credentials': 'true',
-            //     'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+            //     'Access-Control-Allow-Methods': "GET, POST, OPTIONS, PUT, DELETE",
+            //     'Access-Control-Allow-Headers': "content-type",
+            //     'Content-Type': "application/json; charset=utf-8"
             // },
             onChange: this.handleChange
         };
