@@ -7,19 +7,10 @@ import "./excel.css";
 
 const Step = Steps.Step;
 
-const Dragger = Upload.Dragger;
-
 class ExcelPage extends React.Component {
-
     state = {
         fileList: [],
         uploading: false
-    };
-
-    beforeUpload1 = (file) => {
-        this.setState(state => ({
-            fileList: [...state.fileList, file],
-        }));
     };
 
     handleUpload = () => {
@@ -27,7 +18,6 @@ class ExcelPage extends React.Component {
         this.state.fileList.forEach((file) => {
             formData.append('files[]', file);
         });
-        alert(JSON.stringify(formData));
         this.setState({ uploading: true });
         reqwest({
             url: 'http://' + url + '/exec?_mt=excel.uploadExcel',
@@ -53,22 +43,47 @@ class ExcelPage extends React.Component {
     };
 
     render() {
-
+        const { uploading, fileList } = this.state;
         const props = {
-            name: 'file',
-            multiple: false,
-            beforeUpload: this.beforeUpload1,
-            customRequest: this.handleUpload,
+            accept: '.xls,.xlsx',
+            onRemove: (file) => {
+                this.setState((state) => {
+                    const index = state.fileList.indexOf(file);
+                    const newFileList = state.fileList.slice();
+                    newFileList.splice(index, 1);
+                    return {
+                        fileList: newFileList,
+                    };
+                });
+            },
+            beforeUpload: (file) => {
+                this.setState(state => ({
+                    fileList: [...state.fileList, file],
+                }));
+                return false;
+            },
+            fileList
         };
-        
+
         return (
-            <Dragger {...props}>
-                <p className="ant-upload-drag-icon">
-                    <Icon type="inbox" />
-                </p>
-                <p className="ant-upload-text">Click or drag file to this area to upload</p>
-                <p className="ant-upload-hint">Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files</p>
-            </Dragger>
+            <div>
+                <Divider>上传EXCEL</Divider>
+                <div>
+                <Upload {...props}>
+                    <Button icon={'upload'}>选择文件</Button>
+                </Upload>
+                <Button
+                    type="primary"
+                    onClick={this.handleUpload}
+                    disabled={fileList.length === 0}
+                    loading={uploading}
+                    style={{ marginTop: '1%' }}
+                >
+                    {uploading ? '上传中' : '开始上传' }
+                </Button>
+                    </div>
+                <Divider>选择校验逻辑</Divider>
+            </div>
         );
     }
 }

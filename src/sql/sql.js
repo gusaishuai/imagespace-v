@@ -74,14 +74,14 @@ class SqlPage extends React.Component {
         limitColumn: [],
         limitLoading: false,
         limitPagination: {},
-        limitTransposeVisible: false,
+        limitTransposeVisible: false
     };
 
     componentDidMount() {
         document.addEventListener("keydown", this.ctrlEnter);
         let allSql = localStorage.getItem('allSql');
         if (allSql && allSql !== '') {
-            const editor = this.refs.editorSql.getCodeMirror();
+            let editor = this.refs.editorSql.getCodeMirror();
             editor.setValue(allSql);
         }
         this.getAllTables();
@@ -143,7 +143,11 @@ class SqlPage extends React.Component {
 
     //点击-执行sql
     clickExecSql = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
+        let editorSql = this.refs.editorSql;
+        if (!editorSql) {
+            return;
+        }
+        let editor = editorSql.getCodeMirror();
         localStorage.setItem('allSql', editor.getValue());
         let sql = editor.getSelection();
         if (sql === '') {
@@ -436,31 +440,31 @@ class SqlPage extends React.Component {
 
     //code mirror光标处插入select sql
     selectHintTag = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
+        let editor = this.refs.editorSql.getCodeMirror();
         editor.replaceSelection('select * from ');
     };
 
     //code mirror光标处插入select count sql
     selectCountHintTag = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
+        let editor = this.refs.editorSql.getCodeMirror();
         editor.replaceSelection('select count(1) from ');
     };
 
     //code mirror光标处插入insert sql
     insertHintTag = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
+        let editor = this.refs.editorSql.getCodeMirror();
         editor.replaceSelection('insert into  values ');
     };
 
     //code mirror光标处插入update sql
     updateHintTag = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
+        let editor = this.refs.editorSql.getCodeMirror();
         editor.replaceSelection('update  set  where ');
     };
 
     //code mirror光标处插入delete sql
     deleteHintTag = () => {
-        const editor = this.refs.editorSql.getCodeMirror();
+        let editor = this.refs.editorSql.getCodeMirror();
         editor.replaceSelection('delete from ');
     };
 

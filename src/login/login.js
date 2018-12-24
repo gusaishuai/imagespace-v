@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Col, Form, Icon, Input, Layout, Row} from 'antd';
+import {Button, Col, Form, Icon, Input, Layout, Row, Carousel} from 'antd';
 import 'antd/dist/antd.css';
 import {Redirect} from 'react-router-dom';
 import reqwest from 'reqwest';
@@ -11,7 +11,7 @@ import {openErrorNotify} from '../global.js';
 
 const FormItem = Form.Item;
 
-const { Content, Footer, Header } = Layout;
+const { Content, Footer, Header, Sider } = Layout;
 
 class LoginPage extends React.Component {
 
@@ -30,7 +30,7 @@ class LoginPage extends React.Component {
             withCredentials: true,
             type: 'json',
         }).then((data) => {
-            if (data.code === global.respCode.noLogin) {
+            if (data.code === global.respCode.success) {
                 this.setState({ redirect: true });
             } else {
                 this.getCaptcha();
@@ -55,7 +55,7 @@ class LoginPage extends React.Component {
                     },
                     type: 'json',
                 }).then((data) => {
-                    if (data.code === global.respCode.noLogin) {
+                    if (data.code === global.respCode.success) {
                         this.setState({ redirect: true });
                     } else {
                         //提示错误
@@ -82,47 +82,56 @@ class LoginPage extends React.Component {
             this.state.redirect ? <Redirect to={{pathname:"/menu"}} /> :
             <Layout style={{height: '100vh'}}>
                 <Header className="login-form-header" >GSS的想象空间</Header>
-                <Content align="right" style={{padding: "10%"}}>
-                    <Form onSubmit={this.checkUser} className="login-form">
-                        <FormItem>
-                            {getFieldDecorator('userName', {
-                                rules: [{ required: true, message: '请输入用户名' }],
-                            })(
-                                <Input size={'large'} prefix={<Icon type="user" className="login-form-icon" />} placeholder="用户名" />
-                            )}
-                        </FormItem>
-                        <FormItem>
-                            {getFieldDecorator('password', {
-                                rules: [{ required: true, message: '请输入密码' }],
-                            })(
-                                <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="密码" />
-                            )}
-                        </FormItem>
-                        <FormItem>
-                            <Row gutter={10}>
-                                <Col span={14}>
-                                    {getFieldDecorator('captcha', {
-                                        rules: [{ required: true, message: '请输入验证码' }],
-                                    })(
-                                        <Input size={'large'} prefix={<Icon type="safety" className="login-form-icon" />} placeholder="验证码" />
-                                    )}
-                                </Col>
-                                <Col span={10}
-                                     onClick={() => {
-                                         this.getCaptcha();
-                                     }}
-                                >
-                                    {<img src={this.state.captchaUrl} style={{cursor:'pointer', verticalAlign: 'top'}} alt="验证码" />}
-                                </Col>
-                            </Row>
-                        </FormItem>
-                        <FormItem>
-                            <Button size={'large'} type="primary" loading={this.state.buttonLoading} htmlType="submit" className="login-form-button">
-                                登录
-                            </Button>
-                        </FormItem>
-                    </Form>
-                </Content>
+                <Layout>
+                    <Sider width="55%" style={{padding: "10%", background: 'transparent'}}>
+                        <Carousel autoplay dots={false}>
+                            <div><h1>你可以进行SQL查询</h1></div>
+                            <div><h1>你可以进行EXCEL操作</h1></div>
+                            <div><h1>后续开发中。。。</h1></div>
+                        </Carousel>
+                    </Sider>
+                    <Content align="right" style={{padding: "10%"}}>
+                        <Form onSubmit={this.checkUser} className="login-form">
+                            <FormItem>
+                                {getFieldDecorator('userName', {
+                                    rules: [{ required: true, message: '请输入用户名' }],
+                                })(
+                                    <Input size={'large'} prefix={<Icon type="user" className="login-form-icon" />} placeholder="用户名" />
+                                )}
+                            </FormItem>
+                            <FormItem>
+                                {getFieldDecorator('password', {
+                                    rules: [{ required: true, message: '请输入密码' }],
+                                })(
+                                    <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="密码" />
+                                )}
+                            </FormItem>
+                            <FormItem>
+                                <Row gutter={10}>
+                                    <Col span={14}>
+                                        {getFieldDecorator('captcha', {
+                                            rules: [{ required: true, message: '请输入验证码' }],
+                                        })(
+                                            <Input size={'large'} prefix={<Icon type="safety" className="login-form-icon" />} placeholder="验证码" />
+                                        )}
+                                    </Col>
+                                    <Col span={10}
+                                         onClick={() => {
+                                             this.getCaptcha();
+                                         }}
+                                    >
+                                        {<img src={this.state.captchaUrl} style={{cursor:'pointer', verticalAlign: 'top'}} alt="验证码" />}
+                                    </Col>
+                                </Row>
+                            </FormItem>
+                            <FormItem>
+                                <Button size={'large'} type="primary" loading={this.state.buttonLoading} htmlType="submit" className="login-form-button">
+                                    登录
+                                </Button>
+                            </FormItem>
+                        </Form>
+                    </Content>
+                </Layout>
                 <Footer style={{ textAlign: 'center' }}>
                     ©2018 Created by GSS
                 </Footer>
