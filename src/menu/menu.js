@@ -14,7 +14,7 @@ import {url} from '../config.js';
 import {openErrorNotify, openSuccessNotify} from '../global.js';
 import ModifyPwdForm from './modifypwd/modifyPwd.js';
 
-const { Header, Sider, Content } = Layout;
+const { Header, Sider, Content, Footer } = Layout;
 
 class MenuPage extends React.Component {
 
@@ -251,6 +251,9 @@ class MenuPage extends React.Component {
                     <Content style={{ margin: '1% 1%' }} >
                         {this.state.childPage}
                     </Content>
+                    <Footer style={{ textAlign: 'center' }}>
+                        ©2018 Created by GSS
+                    </Footer>
                 </Layout>
             </Layout>
         );

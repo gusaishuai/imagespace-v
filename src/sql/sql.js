@@ -23,9 +23,7 @@ const codemirrorOptions={
     theme: "darcula"
 };
 
-const {
-    Footer, Sider, Content,
-} = Layout;
+const { Footer, Sider, Content } = Layout;
 
 const TabPane = Tabs.TabPane;
 
@@ -623,9 +621,6 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                     </Tabs>
-                    <Footer style={{ textAlign: 'center' }}>
-                        ©2018 Created by GSS
-                    </Footer>
                 </Layout>
             </div>
         );

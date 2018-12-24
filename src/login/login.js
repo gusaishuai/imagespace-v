@@ -84,10 +84,10 @@ class LoginPage extends React.Component {
                 <Header className="login-form-header" >GSS的想象空间</Header>
                 <Layout>
                     <Sider width="55%" style={{padding: "10%", background: 'transparent'}}>
+                        <div><h1>在这里，你可以进行：</h1></div>
                         <Carousel autoplay dots={false}>
-                            <div><h1>你可以进行SQL查询</h1></div>
-                            <div><h1>你可以进行EXCEL操作</h1></div>
-                            <div><h1>后续开发中。。。</h1></div>
+                            <div><h1><Icon type="select"/> SQL查询</h1></div>
+                            <div><h1><Icon type="file-excel"/> EXCEL操作</h1></div>
                         </Carousel>
                     </Sider>
                     <Content align="right" style={{padding: "10%"}}>
