@@ -186,7 +186,7 @@ class MenuPage extends React.Component {
     render() {
         return (
             this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
-            <Layout>
+            <Layout style={{ minHeight: '100vh' }}>
                 <Sider trigger={null}
                        collapsible
                        collapsed={this.state.collapsed}

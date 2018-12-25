@@ -1,18 +1,16 @@
-.ant-table td { white-space: nowrap; }
-
+.ant-table td {
+    white-space: nowrap;
+}
 .all-table-menu {
     height: 388px;
     overflow: auto;
 }
-
 .code-mirror-layout {
     padding-left: 1%;
 }
-
 .tabs-content {
     background: white
 }
-
 .tag-div {
     padding-bottom: 10px;
     padding-left: 30px

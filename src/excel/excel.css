@@ -1,3 +1,14 @@
 .tabs-content {
     background: white
 }
+.dynamic-delete-button {
+    cursor: pointer;
+    position: relative;
+    top: 4px;
+    font-size: 24px;
+    color: darkgray;
+    transition: all .3s;
+}
+.dynamic-delete-button:hover {
+    color: gray;
+}
