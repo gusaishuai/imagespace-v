@@ -1,11 +1,13 @@
 import React from 'react';
-import {message, Upload, Icon, Layout, Form, Input, Button, Table} from 'antd';
+import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Col} from 'antd';
 import reqwest from 'reqwest';
 
 import {url} from "../config";
 import "./excel.css";
 
 const Dragger = Upload.Dragger;
+
+const { Option } = Select;
 
 const { Content, Sider, Header } = Layout;
 
@@ -40,7 +42,8 @@ const columns = [{
 class ExcelPage extends React.Component {
 
     state = {
-        fileList: []
+        fileList: [],
+        currency: '',
     };
 
     uploadExcel = () => {
@@ -126,7 +129,7 @@ class ExcelPage extends React.Component {
         const formItemLayoutWithOutLabel = {
             wrapperCol: {
                 xs: { span: 14, offset: 0 },
-                sm: { span: 10, offset: 4 },
+                sm: { span: 10, offset: 2 },
             }
         };
 
@@ -138,7 +141,28 @@ class ExcelPage extends React.Component {
                 required={false}
                 key={k}
             >
-                {getFieldDecorator(`names[${k}]`, {
+                第&nbsp;&nbsp;
+                {getFieldDecorator(`names1[${k}]`, {
+                    validateTrigger: ['onChange', 'onBlur'],
+                    rules: [{
+                        required: true,
+                        whitespace: true,
+                        message: "请填写列数",
+                    }],
+                })(
+                    <Input placeholder="几" style={{ width: '10%', marginRight: 8 }} />
+                )}
+                列&nbsp;&nbsp;
+                <Select
+                    size={'middle'}
+                    style={{ width: '20%' }}
+                    defaultValue="1"
+                >
+                    <Option value="1">满足</Option>
+                    <Option value="0">不满足</Option>
+                </Select>
+                &nbsp;&nbsp;
+                {getFieldDecorator(`names2[${k}]`, {
                     validateTrigger: ['onChange', 'onBlur'],
                     rules: [{
                         required: true,
@@ -146,8 +170,16 @@ class ExcelPage extends React.Component {
                         message: "请填写正则表达式",
                     }],
                 })(
-                    <Input placeholder="正则表达式" style={{ width: '60%', marginRight: 8 }} />
+                    <Input placeholder="正则表达式" style={{ width: '30%', marginRight: 8 }} />
                 )}
+                <Select
+                    style={{ width: '15%' }}
+                    defaultValue=""
+                >
+                    <Option value="">无</Option>
+                    <Option value="&">并且</Option>
+                    <Option value="|">或者</Option>
+                </Select>
                     <Icon
                         className="dynamic-delete-button"
                         type="minus-circle-o"
@@ -169,7 +201,7 @@ class ExcelPage extends React.Component {
                         </Dragger>
                     </Sider>
                     <Content style={{overflow: 'auto'}}>
-                        <Form onSubmit={this.handleSubmit}>
+                        <Form  onSubmit={this.handleSubmit}>
                             {formItems}
                             <Form.Item {...formItemLayoutWithOutLabel}>
                                 <Button type="dashed" onClick={this.add} style={{ width: '60%' }}>
