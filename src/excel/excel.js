@@ -128,8 +128,7 @@ class ExcelPage extends React.Component {
 
         const formItemLayoutWithOutLabel = {
             wrapperCol: {
-                xs: { span: 14, offset: 0 },
-                sm: { span: 10, offset: 2 },
+                sm: { offset: 1 },
             }
         };
 
@@ -141,7 +140,14 @@ class ExcelPage extends React.Component {
                 required={false}
                 key={k}
             >
-                第&nbsp;&nbsp;
+                <Select
+                    size={'middle'}
+                    style={{ width: '10%' }}
+                    defaultValue=""
+                >
+                    <Option value="">无</Option>
+                    <Option value="(">(</Option>
+                </Select>
                 {getFieldDecorator(`names1[${k}]`, {
                     validateTrigger: ['onChange', 'onBlur'],
                     rules: [{
@@ -150,18 +156,16 @@ class ExcelPage extends React.Component {
                         message: "请填写列数",
                     }],
                 })(
-                    <Input placeholder="几" style={{ width: '10%', marginRight: 8 }} />
+                    <Input placeholder="列数" style={{ width: '10%', margin: 8 }} />
                 )}
-                列&nbsp;&nbsp;
                 <Select
                     size={'middle'}
-                    style={{ width: '20%' }}
+                    style={{ width: '15%' }}
                     defaultValue="1"
                 >
                     <Option value="1">满足</Option>
                     <Option value="0">不满足</Option>
                 </Select>
-                &nbsp;&nbsp;
                 {getFieldDecorator(`names2[${k}]`, {
                     validateTrigger: ['onChange', 'onBlur'],
                     rules: [{
@@ -170,10 +174,18 @@ class ExcelPage extends React.Component {
                         message: "请填写正则表达式",
                     }],
                 })(
-                    <Input placeholder="正则表达式" style={{ width: '30%', marginRight: 8 }} />
+                    <Input placeholder="正则表达式" style={{ width: '25%', margin: 8 }} />
                 )}
                 <Select
-                    style={{ width: '15%' }}
+                    size={'middle'}
+                    style={{ width: '10%' }}
+                    defaultValue=""
+                >
+                    <Option value="">无</Option>
+                    <Option value=")">)</Option>
+                </Select>
+                <Select
+                    style={{ width: '12%', margin: 8 }}
                     defaultValue=""
                 >
                     <Option value="">无</Option>
@@ -190,7 +202,7 @@ class ExcelPage extends React.Component {
         
         return (
             <div>
-                <Layout style={{ height: '30vh' }}>
+                <Layout style={{ height: '35vh' }}>
                     <Sider style={{ background: 'transparent' }} width={'30%'}>
                         <Dragger {...props}>
                             <p className="ant-upload-drag-icon">
@@ -204,7 +216,7 @@ class ExcelPage extends React.Component {
                         <Form  onSubmit={this.handleSubmit}>
                             {formItems}
                             <Form.Item {...formItemLayoutWithOutLabel}>
-                                <Button type="dashed" onClick={this.add} style={{ width: '60%' }}>
+                                <Button type="dashed" onClick={this.add} style={{ width: '80%' }}>
                                     <Icon type="plus" /> 添加过滤规则
                                 </Button>
                                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
