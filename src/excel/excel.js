@@ -1,5 +1,5 @@
 import React from 'react';
-import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Col} from 'antd';
+import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col} from 'antd';
 import reqwest from 'reqwest';
 
 import {url} from "../config";
@@ -126,78 +126,107 @@ class ExcelPage extends React.Component {
 
         const { getFieldDecorator, getFieldValue } = this.props.form;
 
-        const formItemLayoutWithOutLabel = {
-            wrapperCol: {
-                sm: { offset: 1 },
-            }
-        };
-
         getFieldDecorator('keys', { initialValue: [] });
         const keys = getFieldValue('keys');
         const formItems = keys.map((k) => (
-            <Form.Item
-                {...formItemLayoutWithOutLabel}
-                required={false}
-                key={k}
-            >
-                <Select
-                    size={'middle'}
-                    style={{ width: '10%' }}
-                    defaultValue=""
-                >
-                    <Option value="">无</Option>
-                    <Option value="(">(</Option>
-                </Select>
-                {getFieldDecorator(`names1[${k}]`, {
-                    validateTrigger: ['onChange', 'onBlur'],
-                    rules: [{
-                        required: true,
-                        whitespace: true,
-                        message: "请填写列数",
-                    }],
-                })(
-                    <Input placeholder="列数" style={{ width: '10%', margin: 8 }} />
-                )}
-                <Select
-                    size={'middle'}
-                    style={{ width: '15%' }}
-                    defaultValue="1"
-                >
-                    <Option value="1">满足</Option>
-                    <Option value="0">不满足</Option>
-                </Select>
-                {getFieldDecorator(`names2[${k}]`, {
-                    validateTrigger: ['onChange', 'onBlur'],
-                    rules: [{
-                        required: true,
-                        whitespace: true,
-                        message: "请填写正则表达式",
-                    }],
-                })(
-                    <Input placeholder="正则表达式" style={{ width: '25%', margin: 8 }} />
-                )}
-                <Select
-                    size={'middle'}
-                    style={{ width: '10%' }}
-                    defaultValue=""
-                >
-                    <Option value="">无</Option>
-                    <Option value=")">)</Option>
-                </Select>
-                <Select
-                    style={{ width: '12%', margin: 8 }}
-                    defaultValue=""
-                >
-                    <Option value="">无</Option>
-                    <Option value="&">并且</Option>
-                    <Option value="|">或者</Option>
-                </Select>
-                    <Icon
-                        className="dynamic-delete-button"
-                        type="minus-circle-o"
-                        onClick={() => this.remove(k)}
-                    />
-            </Form.Item>
+            <Row gutter={16} key={'r' + k} style={{marginLeft: '3%', marginRight: '0%'}}>
+                <Col span={3} key={'c1' + k}>
+                    <Form.Item
+                        key={'f1' + k}
+                    >
+                        <Select
+                            defaultValue=""
+                        >
+                            <Option value="">无</Option>
+                            <Option value="(">(</Option>
+                            <Option value="((">( x 2</Option>
+                            <Option value="(((">( x 3</Option>
+                        </Select>
+                    </Form.Item>
+                </Col>
+                <Col span={3} key={'c2' + k}>
+                    <Form.Item
+                        key={'f2' + k}
+                    >
+                        {getFieldDecorator(`names1[${k}]`, {
+                            validateTrigger: ['onChange', 'onBlur'],
+                            rules: [{
+                                required: true,
+                                whitespace: true,
+                                message: "请填写列数",
+                            }],
+                        })(
+                            <Input placeholder="列数" />
+                        )}
+                    </Form.Item>
+                </Col>
+                <Col span={4} key={'c3' + k}>
+                    <Form.Item
+                        key={'f3' + k}
+                    >
+                        <Select
+                            defaultValue="1"
+                        >
+                            <Option value="1">满足</Option>
+                            <Option value="0">不满足</Option>
+                        </Select>
+                    </Form.Item>
+                </Col>
+                <Col span={6} key={'c4' + k}>
+                    <Form.Item
+                        key={'f4' + k}
+                    >
+                        {getFieldDecorator(`names2[${k}]`, {
+                            validateTrigger: ['onChange', 'onBlur'],
+                            rules: [{
+                                required: true,
+                                whitespace: true,
+                                message: "请填写值或正则表达式",
+                            }],
+                        })(
+                            <Input placeholder="值或正则表达式" />
+                        )}
+                    </Form.Item>
+                </Col>
+                <Col span={3} key={'c5' + k}>
+                    <Form.Item
+                        key={'f5' + k}
+                    >
+                        <Select
+                            defaultValue=""
+                        >
+                            <Option value="">无</Option>
+                            <Option value=")">)</Option>
+                            <Option value="))">) x 2</Option>
+                            <Option value=")))">) x 3</Option>
+                        </Select>
+                    </Form.Item>
+                </Col>
+                <Col span={3} key={'c6' + k}>
+                    <Form.Item
+                        key={'f6' + k}
+                    >
+                        <Select
+                            defaultValue=""
+                        >
+                            <Option value="">无</Option>
+                            <Option value="&">并且</Option>
+                            <Option value="|">或者</Option>
+                        </Select>
+                    </Form.Item>
+                </Col>
+                <Col span={1} key={'c7' + k}>
+                    <Form.Item
+                        key={'f7' + k}
+                    >
+                        <Icon
+                            className="dynamic-delete-button"
+                            type="minus-circle-o"
+                            onClick={() => this.remove(k)}
+                        />
+                    </Form.Item>
+                </Col>
+            </Row>
         ));
         
         return (
@@ -213,20 +242,27 @@ class ExcelPage extends React.Component {
                         </Dragger>
                     </Sider>
                     <Content style={{overflow: 'auto'}}>
-                        <Form  onSubmit={this.handleSubmit}>
+                        <Form onSubmit={this.handleSubmit}>
                             {formItems}
-                            <Form.Item {...formItemLayoutWithOutLabel}>
-                                <Button type="dashed" onClick={this.add} style={{ width: '80%' }}>
-                                    <Icon type="plus" /> 添加过滤规则
-                                </Button>
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                <Button type="primary" htmlType="submit">查询</Button>
-                            </Form.Item>
+                            <Row gutter={16} key={'rq'} style={{marginLeft: '3%', marginRight: '0%'}}>
+                                <Col span={20} key={'cq'}>
+                                    <Form.Item>
+                                        <Button type="dashed" onClick={this.add} style={{width: '100%'}}>
+                                            <Icon type="plus" /> 添加过滤规则
+                                        </Button>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={3} key={'cq1'}>
+                                    <Form.Item>
+                                        <Button type="primary" htmlType="submit" style={{margin: '1%'}}>查询</Button>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
                         </Form>
                     </Content>
                 </Layout>
                 <Layout>
-                    <Header style={{background: 'transparent'}}/>
+                    <Header style={{background: 'transparent', height: '5vh'}}/>
                     <Content className="tabs-content">
                         <Table size={'middle'} bordered dataSource={dataSource} columns={columns} />
                     </Content>
