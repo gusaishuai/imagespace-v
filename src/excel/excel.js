@@ -102,7 +102,7 @@ class ExcelPage extends React.Component {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
             if (!err) {
-                console.log('Received values of form: ', values);
+                alert(JSON.stringify(values));
             }
         });
     };
@@ -164,12 +164,20 @@ class ExcelPage extends React.Component {
                     <Form.Item
                         key={'f3' + k}
                     >
-                        <Select
-                            defaultValue="1"
-                        >
-                            <Option value="1">满足</Option>
-                            <Option value="0">不满足</Option>
-                        </Select>
+                        {getFieldDecorator(`match[${k}]`, {
+                            initialValue: '1',
+                            rules: [{
+                                required: true,
+                                message: '请选择满足条件'
+                            }],
+                        })(
+                            <Select
+                                defaultValue="1"
+                            >
+                                <Option value="1">满足</Option>
+                                <Option value="0">不满足</Option>
+                            </Select>
+                        )}
                     </Form.Item>
                 </Col>
                 <Col span={6} key={'c4' + k}>
@@ -192,14 +200,20 @@ class ExcelPage extends React.Component {
                     <Form.Item
                         key={'f5' + k}
                     >
-                        <Select
-                            defaultValue=""
-                        >
-                            <Option value="">无</Option>
-                            <Option value=")">)</Option>
-                            <Option value="))">) x 2</Option>
-                            <Option value=")))">) x 3</Option>
-                        </Select>
+                        {getFieldDecorator(`match[${k}]`, {
+                            initialValue: '',
+                            rules: [{
+                                required: true,
+                                message: '请选择满足条件'
+                            }],
+                        })(
+                            <Select>
+                                <Option value="">无</Option>
+                                <Option value=")">)</Option>
+                                <Option value="))">) x 2</Option>
+                                <Option value=")))">) x 3</Option>
+                            </Select>
+                        )}
                     </Form.Item>
                 </Col>
                 <Col span={3} key={'c6' + k}>
