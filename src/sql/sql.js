@@ -471,13 +471,13 @@ class SqlPage extends React.Component {
             this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Layout>
-                    <Sider width={'25%'} className="all-table-menu">
+                    <Sider width={'25%'} className="sql-alltable-menu">
                         <Menu theme="dark" onClick={this.getTableInfo}>
                             {this.state.allTables}
                         </Menu>
                     </Sider>
-                    <Layout width={'75%'} className="code-mirror-layout">
-                        <div className="tag-div">
+                    <Layout width={'75%'} className="sql-codemirror-layout">
+                        <div className="sql-tag-div">
                             <Tag color="magenta" onClick={this.selectHintTag}>select 语句</Tag>
                             <Tag color="volcano" onClick={this.selectCountHintTag}>select count 语句</Tag>
                             <Divider type="vertical" />
@@ -519,7 +519,7 @@ class SqlPage extends React.Component {
                 <Layout>
                     <Tabs>
                         <TabPane tab={<span><Icon type="copy" theme="filled" />执行</span>} key="exec">
-                            <Content className="tabs-content">
+                            <Content className="sql-tabs-content">
                                 <Table
                                     columns={this.state.execColumn}
                                     rowKey={record => record.id}
@@ -557,7 +557,7 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                         <TabPane tab={<span><Icon type="tags" theme="filled" />表结构</span>} key="column">
-                            <Content className="tabs-content">
+                            <Content className="sql-tabs-content">
                                 <Table
                                     columns={this.state.columnColumn}
                                     rowKey={record => record.列名}
@@ -570,7 +570,7 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                         <TabPane tab={<span><Icon type="tags" theme="filled" />表索引</span>} key="index">
-                            <Content className="tabs-content">
+                            <Content className="sql-tabs-content">
                                 <Table
                                     columns={this.state.indexColumn}
                                     rowKey={record => record.索引名}
@@ -583,7 +583,7 @@ class SqlPage extends React.Component {
                             </Content>
                         </TabPane>
                         <TabPane tab={<span><Icon type="book" theme="filled" />表数据</span>} key="limit">
-                            <Content className="tabs-content">
+                            <Content className="sql-tabs-content">
                                 <Table
                                     columns={this.state.limitColumn}
                                     rowKey={record => record.id}

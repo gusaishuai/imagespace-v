@@ -1,7 +1,7 @@
 import React from 'react';
 import {Form, Icon, Input} from 'antd';
 
-import './modifyPwd.css'
+import './modifypwd.css'
 
 const FormItem = Form.Item;
 

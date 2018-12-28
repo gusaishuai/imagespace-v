@@ -12,7 +12,7 @@ import EmptyPage from "../empty/empty.js";
 import './menu.css'
 import {url} from '../config.js';
 import {openErrorNotify, openSuccessNotify} from '../global.js';
-import ModifyPwdForm from './modifypwd/modifyPwd.js';
+import ModifyPwdForm from './modifypwd/modifypwd.js';
 
 const { Header, Sider, Content, Footer } = Layout;
 

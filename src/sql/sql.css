@@ -1,17 +1,17 @@
 .ant-table td {
     white-space: nowrap;
 }
-.all-table-menu {
+.sql-alltable-menu {
     height: 388px;
     overflow: auto;
 }
-.code-mirror-layout {
+.sql-codemirror-layout {
     padding-left: 1%;
 }
-.tabs-content {
+.sql-tabs-content {
     background: white
 }
-.tag-div {
+.sql-tag-div {
     padding-bottom: 10px;
     padding-left: 30px
 }

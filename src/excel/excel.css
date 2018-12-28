@@ -1,7 +1,10 @@
-.tabs-content {
-    background: white
+.excel-layout {
+    height: 35vh;
 }
-.dynamic-delete-button {
+.excel-upload-sider {
+    background: transparent;
+}
+.excel-expr-delete-button {
     cursor: pointer;
     position: relative;
     top: 4px;
@@ -9,6 +12,23 @@
     color: darkgray;
     transition: all .3s;
 }
-.dynamic-delete-button:hover {
+.excel-expr-delete-button:hover {
     color: gray;
+}
+.excel-expr-row {
+    margin-left: 3% !important;
+    margin-right: 0 !important;
+}
+.excel-expr-content {
+    overflow: auto;
+}
+.excel-expr-add-button {
+    width: 100%;
+}
+.excel-table-header {
+    background: transparent;
+    height: 5vh;
+}
+.excel-table-content {
+    background: white
 }
