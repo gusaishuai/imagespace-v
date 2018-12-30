@@ -125,7 +125,7 @@ class MenuPage extends React.Component {
                         'oldPassword': md5(values.oldPassword),
                         'newPassword': md5(values.newPassword)
                     },
-                    type: 'json',
+                    type: 'json'
                 }).then((data) => {
                     if (data.code === global.respCode.noLogin) {
                         this.setState({ noLoginRedirect: true });
@@ -161,7 +161,7 @@ class MenuPage extends React.Component {
             method: 'post',
             crossOrigin: true,
             withCredentials: true,
-            type: 'json',
+            type: 'json'
         }).then((data) => {
             if (data.code === global.respCode.noLogin || data.code === global.respCode.success) {
                 this.setState({ noLoginRedirect: true });

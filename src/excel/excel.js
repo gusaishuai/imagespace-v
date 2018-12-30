@@ -59,7 +59,7 @@ class ExcelPage extends React.Component {
             formData.append('files[]', file);
         });
         reqwest({
-            url: 'http://' + url + '/exec?_mt=excel.queryExcel',
+            url: 'http://' + url + '/exec?_mt=excel.uploadExcel',
             method: 'post',
             crossOrigin: true,
             withCredentials: true,
@@ -121,14 +121,15 @@ class ExcelPage extends React.Component {
                     crossOrigin: true,
                     withCredentials: true,
                     data: {
-                        exprRows: values.exprRows,
-                        leftBracket: values.leftBracket,
-                        colNum: values.colNum,
-                        match: values.match,
-                        regex: values.regex,
-                        rightBracket: values.rightBracket,
-                        conj: values.conj
-                    }
+                        'exprRows': values.exprRows,
+                        'leftBracket': values.leftBracket,
+                        'colNum': values.colNum,
+                        'match': values.match,
+                        'regex': values.regex,
+                        'rightBracket': values.rightBracket,
+                        'conj': values.conj
+                    },
+                    type: 'json'
                 }).then((data) => {
                     if (data.code === global.respCode.noLogin) {
                         this.setState({ noLoginRedirect: true });
