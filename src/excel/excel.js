@@ -1,5 +1,5 @@
 import React from 'react';
-import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col, InputNumber} from 'antd';
+import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col} from 'antd';
 import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
@@ -49,7 +49,9 @@ class ExcelPage extends React.Component {
         fileList: [],
 
         exprQueryLoading: false,
-        exprQueryDisable: false
+        exprQueryDisable: false,
+
+        sheetNum: '',
     };
 
     //上传excel
@@ -121,6 +123,8 @@ class ExcelPage extends React.Component {
                     crossOrigin: true,
                     withCredentials: true,
                     data: {
+                        'sheetNum': values.sheetNum,
+                        'topNum': values.topNum,
                         'exprRows': values.exprRows,
                         'leftBracket': values.leftBracket,
                         'colNum': values.colNum,
@@ -193,16 +197,14 @@ class ExcelPage extends React.Component {
                     <Form.Item key={'f2_' + k}>
                         {getFieldDecorator(`colNum[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
-                            initialValue: 1,
                             rules: [{
                                 required: true,
+                                whitespace: true,
                                 message: "请填写列数",
-                                validator: (rule, value, callback) => {
-                                    if (Number.isNaN(value.number)) {
-                                        alert('nan');
-                                    }
-                                }
-                            }],
+                            }, {
+                                pattern: new RegExp(/^[1-9]\d*$/, "g"),
+                                message: '请填写数字'
+                            }]
                         })(
                             <Input placeholder="列数" />
                         )}
@@ -230,7 +232,6 @@ class ExcelPage extends React.Component {
                             validateTrigger: ['onChange', 'onBlur'],
                             rules: [{
                                 required: true,
-                                whitespace: true,
                                 message: "请填写值或正则表达式",
                             }],
                         })(
@@ -293,30 +294,33 @@ class ExcelPage extends React.Component {
                     <Content className="excel-expr-content">
                         <Form onSubmit={this.exprQuery}>
                             <Row gutter={16} key={'rb1'} className="excel-expr-row">
-                                <Col span={2} key={'cq3'}>
-                                    <Form.Item></Form.Item>
-                                </Col>
-                                <Col span={4} key={'cq2'}>
+                                <Col span={5} key={'cs'}>
                                     <Form.Item>
-                                        {getFieldDecorator(`asdasd`, {
-                                            initialValue: '1'
+                                        {getFieldDecorator(`sheetNum`, {
+                                            rules:[{
+                                                pattern: new RegExp(/^[1-9]\d*$/, "g"),
+                                                message: '请输入正确的sheet数'
+                                            }]
                                         })(
-                                            <InputNumber min={1} precision={0} style={{align: 'right'}} placeholder="Sheet数" />
+                                            <Input placeholder="sheet数，默认1" />
                                         )}
                                     </Form.Item>
                                 </Col>
-                                <Col span={4} key={'cq1'}>
+                                <Col span={5} key={'ct'}>
                                     <Form.Item>
-                                        {getFieldDecorator(`2321`, {
-                                            initialValue: '0'
+                                        {getFieldDecorator(`topNum`, {
+                                            rules:[{
+                                                pattern: new RegExp(/^[1-9]\d*$/, "g"),
+                                                message: '请输入正确的表头行数'
+                                            }]
                                         })(
-                                            <InputNumber min={0} precision={0} placeholder="表头行数" />
+                                            <Input placeholder="表头行数，默认0" />
                                         )}
                                     </Form.Item>
                                 </Col>
-                                <Col span={12} key={'ca1'}>
+                                <Col span={12} key={'cf'}>
                                     <Form.Item>
-                                        {getFieldDecorator(`sass`, {
+                                        {getFieldDecorator(`filterRule`, {
                                             initialValue: ''
                                         })(
                                             <Select>
