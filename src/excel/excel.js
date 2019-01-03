@@ -1,5 +1,5 @@
 import React from 'react';
-import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col} from 'antd';
+import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col, InputNumber} from 'antd';
 import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
@@ -193,10 +193,15 @@ class ExcelPage extends React.Component {
                     <Form.Item key={'f2_' + k}>
                         {getFieldDecorator(`colNum[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
+                            initialValue: 1,
                             rules: [{
                                 required: true,
-                                whitespace: true,
                                 message: "请填写列数",
+                                validator: (rule, value, callback) => {
+                                    if (Number.isNaN(value.number)) {
+                                        alert('nan');
+                                    }
+                                }
                             }],
                         })(
                             <Input placeholder="列数" />
@@ -287,6 +292,42 @@ class ExcelPage extends React.Component {
                     </Sider>
                     <Content className="excel-expr-content">
                         <Form onSubmit={this.exprQuery}>
+                            <Row gutter={16} key={'rb1'} className="excel-expr-row">
+                                <Col span={2} key={'cq3'}>
+                                    <Form.Item></Form.Item>
+                                </Col>
+                                <Col span={4} key={'cq2'}>
+                                    <Form.Item>
+                                        {getFieldDecorator(`asdasd`, {
+                                            initialValue: '1'
+                                        })(
+                                            <InputNumber min={1} precision={0} style={{align: 'right'}} placeholder="Sheet数" />
+                                        )}
+                                    </Form.Item>
+                                </Col>
+                                <Col span={4} key={'cq1'}>
+                                    <Form.Item>
+                                        {getFieldDecorator(`2321`, {
+                                            initialValue: '0'
+                                        })(
+                                            <InputNumber min={0} precision={0} placeholder="表头行数" />
+                                        )}
+                                    </Form.Item>
+                                </Col>
+                                <Col span={12} key={'ca1'}>
+                                    <Form.Item>
+                                        {getFieldDecorator(`sass`, {
+                                            initialValue: ''
+                                        })(
+                                            <Select>
+                                                <Option value="">可选择保存的过滤规则</Option>
+                                                <Option value="&7">性别和英文不一致性别和英文不一致性别和英文不一致性别和英文不一致</Option>
+                                                <Option value="&">性别和英文不一致</Option>
+                                            </Select>
+                                        )}
+                                    </Form.Item>
+                                </Col>
+                            </Row>
                             {expressions}
                             <Row gutter={16} key={'rb'} className="excel-expr-row">
                                 <Col span={3} key={'cq'}>
@@ -295,11 +336,17 @@ class ExcelPage extends React.Component {
                                                 disabled={this.state.exprQueryDisable}>查询</Button>
                                     </Form.Item>
                                 </Col>
-                                <Col span={19} key={'ca'}>
+                                <Col span={16} key={'ca'}>
                                     <Form.Item>
                                         <Button type="dashed" onClick={this.addExpr} className="excel-expr-add-button">
                                             <Icon type="plus" /> 添加过滤规则
                                         </Button>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={3} key={'cs'}>
+                                    <Form.Item>
+                                        <Button type="primary" htmlType="submit" loading={this.state.exprQueryLoading}
+                                                disabled={this.state.exprQueryDisable}>保存</Button>
                                     </Form.Item>
                                 </Col>
                             </Row>
