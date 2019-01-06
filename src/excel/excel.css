@@ -27,7 +27,7 @@
 }
 .excel-table-header {
     background: transparent;
-    height: 5vh;
+    height: 40px;
 }
 .excel-table-content {
     background: white

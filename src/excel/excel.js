@@ -1,5 +1,5 @@
 import React from 'react';
-import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col} from 'antd';
+import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col, Modal} from 'antd';
 import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
@@ -13,33 +13,15 @@ const { Option } = Select;
 
 const { Content, Sider, Header } = Layout;
 
+const transposeColumns = [{
+    dataIndex: 'k',
+    fixed: 'left',
+    width: 1,
+}, {
+    dataIndex: 'v',
+}];
+
 let keyRow = 0;
-
-const dataSource = [{
-    key: '1',
-    name: '胡彦斌',
-    age: 32,
-    address: '西湖区湖底公园1号'
-}, {
-    key: '2',
-    name: '胡彦祖',
-    age: 42,
-    address: '西湖区湖底公园1号'
-}];
-
-const columns = [{
-    title: '姓名',
-    dataIndex: 'name',
-    key: 'name',
-}, {
-    title: '年龄',
-    dataIndex: 'age',
-    key: 'age',
-}, {
-    title: '住址',
-    dataIndex: 'address',
-    key: 'address',
-}];
 
 class ExcelPage extends React.Component {
 
@@ -51,7 +33,15 @@ class ExcelPage extends React.Component {
         exprQueryLoading: false,
         exprQueryDisable: false,
 
-        sheetNum: '',
+        dataRow: [],
+
+        excelData: [],
+        excelColumn: [],
+        excelPagination: {
+            current: 1
+        },
+        excelLoading: false,
+        excelTransposeVisible: false,
     };
 
     //上传excel
@@ -108,14 +98,48 @@ class ExcelPage extends React.Component {
         });
     };
 
-    //根据规则查询
-    exprQuery = (e) => {
-        e.preventDefault();
+    //过滤条件下拉框修改
+    changeFilterRule = (value) => {
+
+        this.addExpr();
+
+        const { form } = this.props;
+
+        form.setFieldsValue({
+            initialProp: [{
+                colNum: value
+            }]
+        });
+    };
+
+    //返回list中获取列名
+    getColumn = (data) => {
+        let dataRows = [];
+        let k = 0;
+        for (let j in data[0]) {
+            let dataRow = {};
+            dataRow.title = j;
+            dataRow.dataIndex = j;
+            dataRows[k] = dataRow;
+            k++;
+        }
+        return dataRows;
+    };
+
+    //执行 - 翻页
+    excelTableChange = (pagination) => {
+        const excelPagination = this.state.excelPagination;
+        excelPagination.current = pagination.current;
+        this.setState({
+            excelPagination: excelPagination
+        });
+
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 this.setState({
                     exprQueryLoading: true,
-                    exprQueryDisable: true
+                    exprQueryDisable: true,
+                    excelLoading: true
                 });
                 reqwest({
                     url: 'http://' + url + '/exec?_mt=excel.exprQuery',
@@ -125,6 +149,7 @@ class ExcelPage extends React.Component {
                     data: {
                         'sheetNum': values.sheetNum,
                         'topNum': values.topNum,
+                        'pageNo': this.state.excelPagination.current,
                         'exprRows': values.exprRows,
                         'leftBracket': values.leftBracket,
                         'colNum': values.colNum,
@@ -140,17 +165,114 @@ class ExcelPage extends React.Component {
                     } else if (data.code !== global.respCode.success) {
                         openErrorNotify(data.msg);
                     } else {
-                        alert(JSON.stringify(data));
+                        const excelPagination = this.state.excelPagination;
+                        excelPagination.total = data.result.pagination.totalCount;
+                        excelPagination.pageSize = data.result.pagination.pageSize;
+                        this.setState({
+                            excelData: data.result.excelDataList,
+                            excelColumn: this.getColumn(data.result.excelDataList),
+                            excelPagination: excelPagination,
+                        });
                     }
                 }, (err, msg) => {
                     openErrorNotify(msg);
                 }).always(() => {
                     this.setState({
                         exprQueryLoading: false,
-                        exprQueryDisable: false
+                        exprQueryDisable: false,
+                        excelLoading: false
                     });
                 });
             }
+        });
+    };
+
+    //根据规则查询
+    exprQuery = (e) => {
+        e.preventDefault();
+        this.props.form.validateFields((err, values) => {
+            if (!err) {
+                this.setState({
+                    exprQueryLoading: true,
+                    exprQueryDisable: true,
+                    excelLoading: true
+                });
+                reqwest({
+                    url: 'http://' + url + '/exec?_mt=excel.exprQuery',
+                    method: 'post',
+                    crossOrigin: true,
+                    withCredentials: true,
+                    data: {
+                        'sheetNum': values.sheetNum,
+                        'topNum': values.topNum,
+                        'pageNo': this.state.excelPagination.current,
+                        'exprRows': values.exprRows,
+                        'leftBracket': values.leftBracket,
+                        'colNum': values.colNum,
+                        'match': values.match,
+                        'regex': values.regex,
+                        'rightBracket': values.rightBracket,
+                        'conj': values.conj
+                    },
+                    type: 'json'
+                }).then((data) => {
+                    if (data.code === global.respCode.noLogin) {
+                        this.setState({ noLoginRedirect: true });
+                    } else if (data.code !== global.respCode.success) {
+                        openErrorNotify(data.msg);
+                    } else {
+                        const excelPagination = this.state.excelPagination;
+                        excelPagination.total = data.result.pagination.totalCount;
+                        excelPagination.pageSize = data.result.pagination.pageSize;
+                        this.setState({
+                            excelData: data.result.excelDataList,
+                            excelColumn: this.getColumn(data.result.excelDataList),
+                            excelPagination: excelPagination,
+                        });
+                    }
+                }, (err, msg) => {
+                    openErrorNotify(msg);
+                }).always(() => {
+                    this.setState({
+                        exprQueryLoading: false,
+                        exprQueryDisable: false,
+                        excelLoading: false
+                    });
+                });
+            }
+        });
+    };
+
+    //执行 - 双击事件
+    excelOnRowDoubleClick = (row) => {
+        return {
+            onDoubleClick : () => {
+                this.setState({
+                    excelTransposeVisible: true,
+                    dataRow: this.transposeRow(row),
+                });
+            },
+        }
+    };
+
+    //行转列
+    transposeRow = (row) => {
+        let dataRow = [];
+        let j = 0;
+        for (let i in row) {
+            let data = {};
+            data.k = i;
+            data.v = row[i];
+            dataRow[j] = data;
+            j++;
+        }
+        return dataRow;
+    };
+
+    //行转列后确认
+    excelTransposeClose = () => {
+        this.setState({
+            excelTransposeVisible: false
         });
     };
 
@@ -174,8 +296,10 @@ class ExcelPage extends React.Component {
         const { getFieldDecorator, getFieldValue } = this.props.form;
 
         getFieldDecorator('exprRows', { initialValue: [] });
+        getFieldDecorator('initialProp', { initialValue: [] });
 
         const exprRows = getFieldValue('exprRows');
+        const initialProp = getFieldValue('initialProp');
 
         const expressions = exprRows.map((k) => (
             <Row gutter={16} key={'r_' + k} className="excel-expr-row">
@@ -197,6 +321,7 @@ class ExcelPage extends React.Component {
                     <Form.Item key={'f2_' + k}>
                         {getFieldDecorator(`colNum[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
+                            initialValue: initialProp[k].colNum,
                             rules: [{
                                 required: true,
                                 whitespace: true,
@@ -299,7 +424,7 @@ class ExcelPage extends React.Component {
                                         {getFieldDecorator(`sheetNum`, {
                                             rules:[{
                                                 pattern: new RegExp(/^[1-9]\d*$/, "g"),
-                                                message: '请输入正确的sheet数'
+                                                message: '请填写数字'
                                             }]
                                         })(
                                             <Input placeholder="sheet数，默认1" />
@@ -311,7 +436,7 @@ class ExcelPage extends React.Component {
                                         {getFieldDecorator(`topNum`, {
                                             rules:[{
                                                 pattern: new RegExp(/^[1-9]\d*$/, "g"),
-                                                message: '请输入正确的表头行数'
+                                                message: '请填写数字'
                                             }]
                                         })(
                                             <Input placeholder="表头行数，默认0" />
@@ -323,10 +448,10 @@ class ExcelPage extends React.Component {
                                         {getFieldDecorator(`filterRule`, {
                                             initialValue: ''
                                         })(
-                                            <Select>
-                                                <Option value="">可选择保存的过滤规则</Option>
-                                                <Option value="&7">性别和英文不一致性别和英文不一致性别和英文不一致性别和英文不一致</Option>
-                                                <Option value="&">性别和英文不一致</Option>
+                                            <Select onChange={this.changeFilterRule}>
+                                                <Option value="">选择过滤规则</Option>
+                                                <Option value="1">性别和英文不一致性别和英文不一致性别和英文不一致性别和英文不一致</Option>
+                                                <Option value="2">性别和英文不一致</Option>
                                             </Select>
                                         )}
                                     </Form.Item>
@@ -360,7 +485,40 @@ class ExcelPage extends React.Component {
                 <Layout>
                     <Header className="excel-table-header"/>
                     <Content className="excel-table-content">
-                        <Table size={'middle'} bordered dataSource={dataSource} columns={columns} />
+                        <Table
+                            columns={this.state.excelColumn}
+                            rowKey={record => record.row}
+                            dataSource={this.state.excelData}
+                            pagination={this.state.excelPagination}
+                            loading={this.state.excelLoading}
+                            onChange={this.excelTableChange}
+                            bordered
+                            onRow={this.excelOnRowDoubleClick}
+                            scroll={{x : true}}
+                            size="middle"
+                        />
+                        <Modal
+                            title = '列块显示'
+                            visible={this.state.excelTransposeVisible}
+                            onCancel={this.excelTransposeClose}
+                            width = {'50%'}
+                            footer={
+                                <Button type="primary" onClick={this.excelTransposeClose}>
+                                    确认
+                                </Button>
+                            }
+                        >
+                            <Table
+                                columns={transposeColumns}
+                                showHeader={false}
+                                rowKey={record => record.key}
+                                dataSource={this.state.dataRow}
+                                pagination={false}
+                                bordered
+                                scroll={{x : true}}
+                                size="middle"
+                            />
+                        </Modal>
                     </Content>
                 </Layout>
             </div>
