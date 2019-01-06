@@ -42,11 +42,44 @@ class ExcelPage extends React.Component {
         },
         excelLoading: false,
         excelTransposeVisible: false,
+
+        filterRules: [],
+
+        filterRuleSelectLoading: false,
+
+        filterRuleLoading: false,
+        filterRuleDisable: false
+    };
+
+    componentDidMount() {
+        this.queryFilterRule();
+    }
+
+    //查询过滤规则
+    queryFilterRule = () => {
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=excel.filterRuleQuery',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                this.setState({ filterRules: data.result });
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        });
     };
 
     //上传excel
     uploadExcel = () => {
         let formData = new FormData();
+        this.setState({ exprQueryDisable: true });
         this.state.fileList.forEach((file) => {
             formData.append('files[]', file);
         });
@@ -69,13 +102,15 @@ class ExcelPage extends React.Component {
                 const fileList = this.state.fileList;
                 fileList[0].status = 'done';
                 this.setState({ fileList: fileList });
-                message.success('上传成功');
+                message.success('上传成功，我们将在服务器上为你保存24小时');
             }
         }, (err, msg) => {
             const fileList = this.state.fileList;
             fileList[0].status = 'error';
             this.setState({ fileList: fileList });
             message.error('上传失败：' + msg);
+        }).always(() => {
+            this.setState({ exprQueryDisable: false });
         });
     };
 
@@ -100,15 +135,42 @@ class ExcelPage extends React.Component {
 
     //过滤条件下拉框修改
     changeFilterRule = (value) => {
-
-        this.addExpr();
-
         const { form } = this.props;
-
+        keyRow = 0;
         form.setFieldsValue({
-            initialProp: [{
-                colNum: value
-            }]
+            exprRows: [],
+            initialProp: []
+        });
+        if (value === '') {
+            return;
+        }
+        this.setState({ filterRuleSelectLoading: true });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=excel.filterRuleDetailQuery',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'ruleId': value
+            },
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                const { form } = this.props;
+                form.setFieldsValue({ initialProp: data.result });
+
+                data.result.map(() => (
+                    this.addExpr()
+                ));
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        }).always(() => {
+            this.setState({ filterRuleSelectLoading: false });
         });
     };
 
@@ -126,70 +188,24 @@ class ExcelPage extends React.Component {
         return dataRows;
     };
 
-    //执行 - 翻页
+    //EXCEL查询 - 翻页
     excelTableChange = (pagination) => {
         const excelPagination = this.state.excelPagination;
         excelPagination.current = pagination.current;
         this.setState({
             excelPagination: excelPagination
         });
-
-        this.props.form.validateFields((err, values) => {
-            if (!err) {
-                this.setState({
-                    exprQueryLoading: true,
-                    exprQueryDisable: true,
-                    excelLoading: true
-                });
-                reqwest({
-                    url: 'http://' + url + '/exec?_mt=excel.exprQuery',
-                    method: 'post',
-                    crossOrigin: true,
-                    withCredentials: true,
-                    data: {
-                        'sheetNum': values.sheetNum,
-                        'topNum': values.topNum,
-                        'pageNo': this.state.excelPagination.current,
-                        'exprRows': values.exprRows,
-                        'leftBracket': values.leftBracket,
-                        'colNum': values.colNum,
-                        'match': values.match,
-                        'regex': values.regex,
-                        'rightBracket': values.rightBracket,
-                        'conj': values.conj
-                    },
-                    type: 'json'
-                }).then((data) => {
-                    if (data.code === global.respCode.noLogin) {
-                        this.setState({ noLoginRedirect: true });
-                    } else if (data.code !== global.respCode.success) {
-                        openErrorNotify(data.msg);
-                    } else {
-                        const excelPagination = this.state.excelPagination;
-                        excelPagination.total = data.result.pagination.totalCount;
-                        excelPagination.pageSize = data.result.pagination.pageSize;
-                        this.setState({
-                            excelData: data.result.excelDataList,
-                            excelColumn: this.getColumn(data.result.excelDataList),
-                            excelPagination: excelPagination,
-                        });
-                    }
-                }, (err, msg) => {
-                    openErrorNotify(msg);
-                }).always(() => {
-                    this.setState({
-                        exprQueryLoading: false,
-                        exprQueryDisable: false,
-                        excelLoading: false
-                    });
-                });
-            }
-        });
+        this.excelQuery();
     };
 
-    //根据规则查询
+    //EXCEL根据规则查询
     exprQuery = (e) => {
         e.preventDefault();
+        this.excelQuery();
+    };
+
+    //EXCEL查询或分页查询
+    excelQuery = () => {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 this.setState({
@@ -209,7 +225,7 @@ class ExcelPage extends React.Component {
                         'exprRows': values.exprRows,
                         'leftBracket': values.leftBracket,
                         'colNum': values.colNum,
-                        'match': values.match,
+                        'matched': values.matched,
                         'regex': values.regex,
                         'rightBracket': values.rightBracket,
                         'conj': values.conj
@@ -301,12 +317,12 @@ class ExcelPage extends React.Component {
         const exprRows = getFieldValue('exprRows');
         const initialProp = getFieldValue('initialProp');
 
-        const expressions = exprRows.map((k) => (
+        const filterRuleRow = exprRows.map((k) => (
             <Row gutter={16} key={'r_' + k} className="excel-expr-row">
                 <Col span={3} key={'c1_' + k}>
                     <Form.Item key={'f1_' + k}>
                         {getFieldDecorator(`leftBracket[${k}]`, {
-                            initialValue: ''
+                            initialValue: initialProp[k] ? initialProp[k].leftBracket : ''
                         })(
                             <Select>
                                 <Option value="">无</Option>
@@ -321,7 +337,7 @@ class ExcelPage extends React.Component {
                     <Form.Item key={'f2_' + k}>
                         {getFieldDecorator(`colNum[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
-                            initialValue: initialProp[k].colNum,
+                            initialValue: initialProp[k] ? initialProp[k].colNum : '',
                             rules: [{
                                 required: true,
                                 whitespace: true,
@@ -337,8 +353,8 @@ class ExcelPage extends React.Component {
                 </Col>
                 <Col span={4} key={'c3_' + k}>
                     <Form.Item key={'f3_' + k}>
-                        {getFieldDecorator(`match[${k}]`, {
-                            initialValue: '1',
+                        {getFieldDecorator(`matched[${k}]`, {
+                            initialValue: initialProp[k] ? initialProp[k].matched : '1',
                             rules: [{
                                 required: true,
                                 message: '请选择满足条件'
@@ -355,6 +371,7 @@ class ExcelPage extends React.Component {
                     <Form.Item key={'f4_' + k}>
                         {getFieldDecorator(`regex[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
+                            initialValue: initialProp[k] ? initialProp[k].regex : '',
                             rules: [{
                                 required: true,
                                 message: "请填写值或正则表达式",
@@ -367,7 +384,7 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c5_' + k}>
                     <Form.Item key={'f5_' + k}>
                         {getFieldDecorator(`rightBracket[${k}]`, {
-                            initialValue: ''
+                            initialValue: initialProp[k] ? initialProp[k].rightBracket : ''
                         })(
                             <Select>
                                 <Option value="">无</Option>
@@ -381,7 +398,7 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c6_' + k}>
                     <Form.Item key={'f6_' + k}>
                         {getFieldDecorator(`conj[${k}]`, {
-                            initialValue: ''
+                            initialValue: initialProp[k] ? initialProp[k].conj : ''
                         })(
                             <Select>
                                 <Option value="">无</Option>
@@ -401,6 +418,10 @@ class ExcelPage extends React.Component {
                     </Form.Item>
                 </Col>
             </Row>
+        ));
+
+        const filterRuleOptions = this.state.filterRules.map((k) => (
+            <Option key={k.id} value={k.id}>{k.name}</Option>
         ));
         
         return (
@@ -435,7 +456,7 @@ class ExcelPage extends React.Component {
                                     <Form.Item>
                                         {getFieldDecorator(`topNum`, {
                                             rules:[{
-                                                pattern: new RegExp(/^[1-9]\d*$/, "g"),
+                                                pattern: new RegExp(/^(0|[1-9]\d*)$/, "g"),
                                                 message: '请填写数字'
                                             }]
                                         })(
@@ -448,16 +469,15 @@ class ExcelPage extends React.Component {
                                         {getFieldDecorator(`filterRule`, {
                                             initialValue: ''
                                         })(
-                                            <Select onChange={this.changeFilterRule}>
+                                            <Select onChange={this.changeFilterRule} loading={this.state.filterRuleSelectLoading}>
                                                 <Option value="">选择过滤规则</Option>
-                                                <Option value="1">性别和英文不一致性别和英文不一致性别和英文不一致性别和英文不一致</Option>
-                                                <Option value="2">性别和英文不一致</Option>
+                                                {filterRuleOptions}
                                             </Select>
                                         )}
                                     </Form.Item>
                                 </Col>
                             </Row>
-                            {expressions}
+                            {filterRuleRow}
                             <Row gutter={16} key={'rb'} className="excel-expr-row">
                                 <Col span={3} key={'cq'}>
                                     <Form.Item>
@@ -465,17 +485,17 @@ class ExcelPage extends React.Component {
                                                 disabled={this.state.exprQueryDisable}>查询</Button>
                                     </Form.Item>
                                 </Col>
-                                <Col span={16} key={'ca'}>
+                                <Col span={15} key={'ca'}>
                                     <Form.Item>
                                         <Button type="dashed" onClick={this.addExpr} className="excel-expr-add-button">
                                             <Icon type="plus" /> 添加过滤规则
                                         </Button>
                                     </Form.Item>
                                 </Col>
-                                <Col span={3} key={'cs'}>
-                                    <Form.Item>
-                                        <Button type="primary" htmlType="submit" loading={this.state.exprQueryLoading}
-                                                disabled={this.state.exprQueryDisable}>保存</Button>
+                                <Col span={4} key={'cs'}>
+                                    <Form.Item style = {{textAlign: 'right'}}>
+                                        <Button type="primary" htmlType="submit" loading={this.state.filterRuleLoading}
+                                                disabled={this.state.filterRuleDisable}>保 存 规 则</Button>
                                     </Form.Item>
                                 </Col>
                             </Row>
