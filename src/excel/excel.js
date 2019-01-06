@@ -1,10 +1,11 @@
 import React from 'react';
-import {message, Upload, Icon, Layout, Form, Input, Button, Table, Select, Row, Col, Modal} from 'antd';
+import {Button, Col, Form, Icon, Input, Layout, message, Modal, Row, Select, Table, Upload} from 'antd';
 import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
 import {url} from "../config";
-import {openErrorNotify, openSuccessNotify} from '../global.js';
+import {openErrorNotify} from '../global.js';
+import SaveFilterRuleForm from './filterrule/savefilterrule.js'
 import "./excel.css";
 
 const Dragger = Upload.Dragger;
@@ -48,7 +49,12 @@ class ExcelPage extends React.Component {
         filterRuleSelectLoading: false,
 
         filterRuleLoading: false,
-        filterRuleDisable: false
+        filterRuleDisable: false,
+
+        saveFilterRuleVisible: false,
+        saveFilterRuleLoading: false,
+        saveFilterRuleDisable: false,
+        saveFilterRuleProp: {}
     };
 
     componentDidMount() {
@@ -292,6 +298,79 @@ class ExcelPage extends React.Component {
         });
     };
 
+    //显示保存规则框
+    showSaveFilterRule = () => {
+        const { form } = this.props;
+        const exprRows = form.getFieldValue('exprRows');
+        let hasFilterRule = false;
+        for (let exprRow in exprRows) {
+            if (exprRow >= 0) {
+                hasFilterRule = true;
+            }
+        }
+        if (!hasFilterRule) {
+            openErrorNotify('至少要存在一条过滤规则');
+        } else {
+            this.setState({
+                saveFilterRuleVisible: true,
+                saveFilterRuleProp: form.getFieldsValue()
+            });
+        }
+    };
+
+    //保存规则框关闭
+    saveFilterRuleClose = () => {
+        this.setState({
+            saveFilterRuleVisible: false
+        });
+    };
+
+    //保存过滤规则
+    saveFilterRule = () => {
+        this.refs.saveFilterRuleForm.validateFields((err, values) => {
+            if (!err) {
+                this.setState({
+                    saveFilterRuleLoading: true,
+                    saveFilterRuleDisable: true
+                });
+                reqwest({
+                    url: 'http://' + url + '/exec?_mt=excel.filterRuleUpdate',
+                    method: 'post',
+                    crossOrigin: true,
+                    withCredentials: true,
+                    data: {
+                        'filterRuleName': values.filterRuleName,
+                        'exprRows': values._exprRows,
+                        'leftBracket': values._leftBracket,
+                        'colNum': values._colNum,
+                        'matched': values._matched,
+                        'regex': values._regex,
+                        'rightBracket': values._rightBracket,
+                        'conj': values._conj
+                    },
+                    type: 'json'
+                }).then((data) => {
+                    if (data.code === global.respCode.noLogin) {
+                        this.setState({ noLoginRedirect: true });
+                    } else if (data.code !== global.respCode.success) {
+                        openErrorNotify(data.msg);
+                    } else {
+                        this.setState({
+                            saveFilterRuleVisible: false
+                        });
+                    }
+                }, (err, msg) => {
+                    openErrorNotify(msg);
+                }).always(() => {
+                    this.setState({
+                        saveFilterRuleLoading: false,
+                        saveFilterRuleDisable: false
+                    });
+                });
+            }
+        });
+    };
+
     render() {
 
         const props = {
@@ -494,9 +573,27 @@ class ExcelPage extends React.Component {
                                 </Col>
                                 <Col span={4} key={'cs'}>
                                     <Form.Item style = {{textAlign: 'right'}}>
-                                        <Button type="primary" htmlType="submit" loading={this.state.filterRuleLoading}
+                                        <Button type="primary" onClick={this.showSaveFilterRule}
+                                                loading={this.state.filterRuleLoading}
                                                 disabled={this.state.filterRuleDisable}>保 存 规 则</Button>
                                     </Form.Item>
+                                    <Modal
+                                        title="保存过滤规则"
+                                        width={'65%'}
+                                        visible={this.state.saveFilterRuleVisible}
+                                        onCancel={this.saveFilterRuleClose}
+                                        footer={[
+                                            <Button key="cancel" onClick={this.saveFilterRuleClose}>
+                                                取消
+                                            </Button>,
+                                            <Button key="confirm" type="primary" loading={this.state.saveFilterRuleLoading}
+                                                    disabled={this.state.saveFilterRuleDisable} onClick={this.saveFilterRule}>
+                                                确认
+                                            </Button>
+                                        ]}
+                                    >
+                                        <SaveFilterRuleForm ref="saveFilterRuleForm" param={this.state.saveFilterRuleProp} />
+                                    </Modal>
                                 </Col>
                             </Row>
                         </Form>

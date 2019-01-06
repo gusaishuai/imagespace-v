@@ -3,8 +3,6 @@ import {Form, Icon, Input} from 'antd';
 
 import './modifypwd.css'
 
-const FormItem = Form.Item;
-
 class ModifyPwdForm extends React.Component {
 
     newPwdAgainSame = (rule, value, callback) => {
@@ -27,14 +25,14 @@ class ModifyPwdForm extends React.Component {
         const { getFieldDecorator } = this.props.form;
         return (
             <Form>
-                <FormItem>
+                <Form.item>
                     {getFieldDecorator('oldPassword', {
                         rules: [{ required: true, message: '请输入原密码' }],
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="原密码" />
                     )}
-                </FormItem>
-                <FormItem>
+                </Form.item>
+                <Form.item>
                     {getFieldDecorator('newPassword', {
                         validateFirst: true,
                         rules: [
@@ -46,14 +44,14 @@ class ModifyPwdForm extends React.Component {
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="新密码" />
                     )}
-                </FormItem>
-                <FormItem>
+                </Form.item>
+                <Form.item>
                     {getFieldDecorator('newPasswordAgain', {
                         rules: [{ required: true, message: '请重新输入新密码' }, { validator: this.newPwdAgainSame }],
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="重新输入新密码" />
                     )}
-                </FormItem>
+                </Form.item>
             </Form>
         );
     }
