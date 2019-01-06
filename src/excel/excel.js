@@ -4,7 +4,7 @@ import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
 import {url} from "../config";
-import {openErrorNotify} from '../global.js';
+import {openErrorNotify, openSuccessNotify} from '../global.js';
 import SaveFilterRuleForm from './filterrule/savefilterrule.js'
 import "./excel.css";
 
@@ -355,6 +355,7 @@ class ExcelPage extends React.Component {
                     } else if (data.code !== global.respCode.success) {
                         openErrorNotify(data.msg);
                     } else {
+                        openSuccessNotify('过滤规则保存成功');
                         this.setState({
                             saveFilterRuleVisible: false
                         });

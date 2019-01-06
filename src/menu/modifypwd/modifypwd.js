@@ -25,14 +25,14 @@ class ModifyPwdForm extends React.Component {
         const { getFieldDecorator } = this.props.form;
         return (
             <Form>
-                <Form.item>
+                <Form.Item>
                     {getFieldDecorator('oldPassword', {
                         rules: [{ required: true, message: '请输入原密码' }],
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="原密码" />
                     )}
-                </Form.item>
-                <Form.item>
+                </Form.Item>
+                <Form.Item>
                     {getFieldDecorator('newPassword', {
                         validateFirst: true,
                         rules: [
@@ -44,14 +44,14 @@ class ModifyPwdForm extends React.Component {
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="新密码" />
                     )}
-                </Form.item>
-                <Form.item>
+                </Form.Item>
+                <Form.Item>
                     {getFieldDecorator('newPasswordAgain', {
                         rules: [{ required: true, message: '请重新输入新密码' }, { validator: this.newPwdAgainSame }],
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="重新输入新密码" />
                     )}
-                </Form.item>
+                </Form.Item>
             </Form>
         );
     }

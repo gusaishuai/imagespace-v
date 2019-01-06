@@ -91,21 +91,21 @@ class LoginPage extends React.Component {
                     </Sider>
                     <Content align="right" style={{padding: "10%"}}>
                         <Form onSubmit={this.checkUser} className="login-form">
-                            <Form.item>
+                            <Form.Item>
                                 {getFieldDecorator('userName', {
                                     rules: [{ required: true, message: '请输入用户名' }],
                                 })(
                                     <Input size={'large'} prefix={<Icon type="user" className="login-form-icon" />} placeholder="用户名" />
                                 )}
-                            </Form.item>
-                            <Form.item>
+                            </Form.Item>
+                            <Form.Item>
                                 {getFieldDecorator('password', {
                                     rules: [{ required: true, message: '请输入密码' }],
                                 })(
                                     <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="密码" />
                                 )}
-                            </Form.item>
-                            <Form.item>
+                            </Form.Item>
+                            <Form.Item>
                                 <Row gutter={10}>
                                     <Col span={14}>
                                         {getFieldDecorator('captcha', {
@@ -122,12 +122,12 @@ class LoginPage extends React.Component {
                                         {<img src={this.state.captchaUrl} style={{cursor:'pointer', verticalAlign: 'top'}} alt="验证码" />}
                                     </Col>
                                 </Row>
-                            </Form.item>
-                            <Form.item>
+                            </Form.Item>
+                            <Form.Item>
                                 <Button size={'large'} type="primary" loading={this.state.buttonLoading} htmlType="submit" className="login-form-button">
                                     登录
                                 </Button>
-                            </Form.item>
+                            </Form.Item>
                         </Form>
                     </Content>
                 </Layout>
