@@ -302,24 +302,24 @@ class ExcelPage extends React.Component {
     showSaveFilterRule = () => {
         this.props.form.validateFields((err, values) => {
             if (err) {
-                openErrorNotify('请111');
+                openErrorNotify('过滤规则不符合规范');
+                return;
+            }
+            const { form } = this.props;
+            const exprRows = form.getFieldValue('exprRows');
+            let hasFilterRule = false;
+            for (let exprRow in exprRows) {
+                if (exprRow >= 0) {
+                    hasFilterRule = true;
+                }
+            }
+            if (!hasFilterRule) {
+                openErrorNotify('至少要存在一条过滤规则');
             } else {
-                const { form } = this.props;
-                const exprRows = form.getFieldValue('exprRows');
-                let hasFilterRule = false;
-                for (let exprRow in exprRows) {
-                    if (exprRow >= 0) {
-                        hasFilterRule = true;
-                    }
-                }
-                if (!hasFilterRule) {
-                    openErrorNotify('至少要存在一条过滤规则');
-                } else {
-                    this.setState({
-                        saveFilterRuleVisible: true,
-                        saveFilterRuleProp: form.getFieldsValue()
-                    });
-                }
+                this.setState({
+                    saveFilterRuleVisible: true,
+                    saveFilterRuleProp: form.getFieldsValue()
+                });
             }
         });
     };
@@ -424,6 +424,7 @@ class ExcelPage extends React.Component {
                         {getFieldDecorator(`colNum[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
                             initialValue: initialProp[k] ? initialProp[k].colNum : '',
+                            validateFirst: true,
                             rules: [{
                                 required: true,
                                 whitespace: true,
@@ -431,6 +432,9 @@ class ExcelPage extends React.Component {
                             }, {
                                 pattern: new RegExp(/^[1-9]\d*$/, "g"),
                                 message: '请填写数字'
+                            }, {
+                                max: 8,
+                                message: '需小于8位'
                             }]
                         })(
                             <Input placeholder="列数" />
@@ -458,9 +462,13 @@ class ExcelPage extends React.Component {
                         {getFieldDecorator(`regex[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
                             initialValue: initialProp[k] ? initialProp[k].regex : '',
+                            validateFirst: true,
                             rules: [{
                                 required: true,
                                 message: "请填写值或正则表达式",
+                            },{
+                                max: 256,
+                                message: '请设置小于256个字符'
                             }],
                         })(
                             <Input placeholder="值或正则表达式" />
@@ -550,7 +558,7 @@ class ExcelPage extends React.Component {
                                         )}
                                     </Form.Item>
                                 </Col>
-                                <Col span={12} key={'cf'}>
+                                <Col span={9} key={'cf'}>
                                     <Form.Item>
                                         {getFieldDecorator(`filterRule`, {
                                             initialValue: ''
@@ -560,6 +568,11 @@ class ExcelPage extends React.Component {
                                                 {filterRuleOptions}
                                             </Select>
                                         )}
+                                    </Form.Item>
+                                </Col>
+                                <Col span={3} key={'cb'}>
+                                    <Form.Item>
+                                        <Button type="primary">删除</Button>
                                     </Form.Item>
                                 </Col>
                             </Row>
