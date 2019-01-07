@@ -300,22 +300,28 @@ class ExcelPage extends React.Component {
 
     //显示保存规则框
     showSaveFilterRule = () => {
-        const { form } = this.props;
-        const exprRows = form.getFieldValue('exprRows');
-        let hasFilterRule = false;
-        for (let exprRow in exprRows) {
-            if (exprRow >= 0) {
-                hasFilterRule = true;
+        this.props.form.validateFields((err, values) => {
+            if (err) {
+                openErrorNotify('请111');
+            } else {
+                const { form } = this.props;
+                const exprRows = form.getFieldValue('exprRows');
+                let hasFilterRule = false;
+                for (let exprRow in exprRows) {
+                    if (exprRow >= 0) {
+                        hasFilterRule = true;
+                    }
+                }
+                if (!hasFilterRule) {
+                    openErrorNotify('至少要存在一条过滤规则');
+                } else {
+                    this.setState({
+                        saveFilterRuleVisible: true,
+                        saveFilterRuleProp: form.getFieldsValue()
+                    });
+                }
             }
-        }
-        if (!hasFilterRule) {
-            openErrorNotify('至少要存在一条过滤规则');
-        } else {
-            this.setState({
-                saveFilterRuleVisible: true,
-                saveFilterRuleProp: form.getFieldsValue()
-            });
-        }
+        });
     };
 
     //保存规则框关闭
