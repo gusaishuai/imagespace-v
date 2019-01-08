@@ -439,6 +439,9 @@ class ExcelPage extends React.Component {
                 this.setState({
                     deleteFilterRuleVisible: false
                 });
+                form.setFieldsValue({
+                    filterRule: undefined,
+                });
                 //刷新过滤规则
                 this.queryFilterRule();
             }
@@ -482,7 +485,7 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c1_' + k}>
                     <Form.Item key={'f1_' + k}>
                         {getFieldDecorator(`leftBracket[${k}]`, {
-                            initialValue: initialProp[k] ? initialProp[k].leftBracket : undefined
+                            initialValue: initialProp[k] && initialProp[k].leftBracket !== '' ? initialProp[k].leftBracket : undefined
                         })(
                             <Select allowClear placeholder="括号">
                                 <Option value="(">(</Option>
@@ -551,7 +554,7 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c5_' + k}>
                     <Form.Item key={'f5_' + k}>
                         {getFieldDecorator(`rightBracket[${k}]`, {
-                            initialValue: initialProp[k] ? initialProp[k].rightBracket : undefined
+                            initialValue: initialProp[k] && initialProp[k].rightBracket !== '' ? initialProp[k].rightBracket : undefined
                         })(
                             <Select allowClear placeholder="括号">
                                 <Option value=")">)</Option>
@@ -564,7 +567,7 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c6_' + k}>
                     <Form.Item key={'f6_' + k}>
                         {getFieldDecorator(`conj[${k}]`, {
-                            initialValue: initialProp[k] ? initialProp[k].conj : undefined
+                            initialValue: initialProp[k] && initialProp[k].conj !== '' ? initialProp[k].conj : undefined
                         })(
                             <Select allowClear placeholder="连接">
                                 <Option value="&">并且</Option>
