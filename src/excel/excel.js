@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Col, Form, Icon, Input, Layout, message, Modal, Row, Select, Table, Upload} from 'antd';
+import {Button, Col, Form, Icon, Input, Layout, message, Modal, Row, Select, Table, Upload, Tooltip} from 'antd';
 import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
@@ -54,7 +54,12 @@ class ExcelPage extends React.Component {
         saveFilterRuleVisible: false,
         saveFilterRuleLoading: false,
         saveFilterRuleDisable: false,
-        saveFilterRuleProp: {}
+        saveFilterRuleProp: {},
+
+        deleteFilterRuleVisible: false,
+        deleteFilterRuleLoading: false,
+        deleteFilterRuleDisable: false,
+        deleteFilterRuleName: ''
     };
 
     componentDidMount() {
@@ -147,7 +152,7 @@ class ExcelPage extends React.Component {
             exprRows: [],
             initialProp: []
         });
-        if (value === '') {
+        if (!value) {
             return;
         }
         this.setState({ filterRuleSelectLoading: true });
@@ -300,12 +305,12 @@ class ExcelPage extends React.Component {
 
     //显示保存规则框
     showSaveFilterRule = () => {
-        this.props.form.validateFields((err, values) => {
+        const { form } = this.props;
+        form.validateFields((err, values) => {
             if (err) {
                 openErrorNotify('过滤规则不符合规范');
                 return;
             }
-            const { form } = this.props;
             const exprRows = form.getFieldValue('exprRows');
             let hasFilterRule = false;
             for (let exprRow in exprRows) {
@@ -318,7 +323,7 @@ class ExcelPage extends React.Component {
             } else {
                 this.setState({
                     saveFilterRuleVisible: true,
-                    saveFilterRuleProp: form.getFieldsValue()
+                    saveFilterRuleProp: values
                 });
             }
         });
@@ -365,6 +370,8 @@ class ExcelPage extends React.Component {
                         this.setState({
                             saveFilterRuleVisible: false
                         });
+                        //刷新过滤规则
+                        this.queryFilterRule();
                     }
                 }, (err, msg) => {
                     openErrorNotify(msg);
@@ -375,6 +382,73 @@ class ExcelPage extends React.Component {
                     });
                 });
             }
+        });
+    };
+
+    //删除过滤规则框打开
+    showDeleteFilterRule = () => {
+        const { form } = this.props;
+        const filterRule = form.getFieldValue('filterRule');
+        if (!filterRule) {
+            openErrorNotify('必须选择一条规则');
+            return;
+        }
+        let filterRuleName = '未知规则';
+        this.state.filterRules.forEach((value) => {
+            if (value.id === filterRule) {
+                filterRuleName = value.name;
+            }
+        });
+        this.setState({
+            deleteFilterRuleVisible: true,
+            deleteFilterRuleName: filterRuleName
+        });
+    };
+
+    //删除过滤规则框关闭
+    deleteFilterRuleClose = () => {
+        this.setState({
+            deleteFilterRuleVisible: false
+        });
+    };
+
+    //删除过滤规则
+    deleteFilterRule = () => {
+        this.setState({
+            deleteFilterRuleLoading: true,
+            deleteFilterRuleDisable: true
+        });
+        const { form } = this.props;
+        const filterRule = form.getFieldValue('filterRule');
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=excel.filterRuleDelete',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'ruleId': filterRule,
+            },
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                openSuccessNotify('过滤规则删除成功');
+                this.setState({
+                    deleteFilterRuleVisible: false
+                });
+                //刷新过滤规则
+                this.queryFilterRule();
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        }).always(() => {
+            this.setState({
+                deleteFilterRuleLoading: false,
+                deleteFilterRuleDisable: false
+            });
         });
     };
 
@@ -408,10 +482,9 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c1_' + k}>
                     <Form.Item key={'f1_' + k}>
                         {getFieldDecorator(`leftBracket[${k}]`, {
-                            initialValue: initialProp[k] ? initialProp[k].leftBracket : ''
+                            initialValue: initialProp[k] ? initialProp[k].leftBracket : undefined
                         })(
-                            <Select>
-                                <Option value="">无</Option>
+                            <Select allowClear placeholder="括号">
                                 <Option value="(">(</Option>
                                 <Option value="((">( x 2</Option>
                                 <Option value="(((">( x 3</Option>
@@ -478,10 +551,9 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c5_' + k}>
                     <Form.Item key={'f5_' + k}>
                         {getFieldDecorator(`rightBracket[${k}]`, {
-                            initialValue: initialProp[k] ? initialProp[k].rightBracket : ''
+                            initialValue: initialProp[k] ? initialProp[k].rightBracket : undefined
                         })(
-                            <Select>
-                                <Option value="">无</Option>
+                            <Select allowClear placeholder="括号">
                                 <Option value=")">)</Option>
                                 <Option value="))">) x 2</Option>
                                 <Option value=")))">) x 3</Option>
@@ -492,10 +564,9 @@ class ExcelPage extends React.Component {
                 <Col span={3} key={'c6_' + k}>
                     <Form.Item key={'f6_' + k}>
                         {getFieldDecorator(`conj[${k}]`, {
-                            initialValue: initialProp[k] ? initialProp[k].conj : ''
+                            initialValue: initialProp[k] ? initialProp[k].conj : undefined
                         })(
-                            <Select>
-                                <Option value="">无</Option>
+                            <Select allowClear placeholder="连接">
                                 <Option value="&">并且</Option>
                                 <Option value="|">或者</Option>
                             </Select>
@@ -534,45 +605,64 @@ class ExcelPage extends React.Component {
                     <Content className="excel-expr-content">
                         <Form onSubmit={this.exprQuery}>
                             <Row gutter={16} key={'rb1'} className="excel-expr-row">
-                                <Col span={5} key={'cs'}>
+                                <Col span={3} key={'cs'}>
                                     <Form.Item>
-                                        {getFieldDecorator(`sheetNum`, {
-                                            rules:[{
-                                                pattern: new RegExp(/^[1-9]\d*$/, "g"),
-                                                message: '请填写数字'
-                                            }]
-                                        })(
-                                            <Input placeholder="sheet数，默认1" />
-                                        )}
+                                        <Tooltip title="第几个sheet，缺省值：1">
+                                            {getFieldDecorator(`sheetNum`, {
+                                                rules:[{
+                                                    pattern: new RegExp(/^[1-9]\d*$/, "g"),
+                                                    message: '请填写数字'
+                                                }]
+                                            })(
+                                                <Input placeholder="表序数" />
+                                            )}
+                                        </Tooltip>
                                     </Form.Item>
                                 </Col>
-                                <Col span={5} key={'ct'}>
+                                <Col span={3} key={'ct'}>
                                     <Form.Item>
-                                        {getFieldDecorator(`topNum`, {
-                                            rules:[{
-                                                pattern: new RegExp(/^(0|[1-9]\d*)$/, "g"),
-                                                message: '请填写数字'
-                                            }]
-                                        })(
-                                            <Input placeholder="表头行数，默认0" />
-                                        )}
+                                        <Tooltip title="表头的行数，缺省值：0">
+                                            {getFieldDecorator(`topNum`, {
+                                                rules:[{
+                                                    pattern: new RegExp(/^(0|[1-9]\d*)$/, "g"),
+                                                    message: '请填写数字'
+                                                }]
+                                            })(
+                                                <Input placeholder="表头数" />
+                                            )}
+                                        </Tooltip>
                                     </Form.Item>
                                 </Col>
-                                <Col span={9} key={'cf'}>
+                                <Col span={12} key={'cf'}>
                                     <Form.Item>
                                         {getFieldDecorator(`filterRule`, {
-                                            initialValue: ''
                                         })(
-                                            <Select onChange={this.changeFilterRule} loading={this.state.filterRuleSelectLoading}>
-                                                <Option value="">选择过滤规则</Option>
+                                            <Select onChange={this.changeFilterRule} loading={this.state.filterRuleSelectLoading}
+                                                    allowClear placeholder="选择过滤规则">
                                                 {filterRuleOptions}
                                             </Select>
                                         )}
                                     </Form.Item>
                                 </Col>
-                                <Col span={3} key={'cb'}>
-                                    <Form.Item>
-                                        <Button type="primary">删除</Button>
+                                <Col span={4} key={'cd'}>
+                                    <Form.Item style = {{textAlign: 'right'}}>
+                                        <Button type="primary" onClick={this.showDeleteFilterRule}>删 除 规 则</Button>
+                                        <Modal
+                                            title="确认删除吗？"
+                                            visible={this.state.deleteFilterRuleVisible}
+                                            onCancel={this.deleteFilterRuleClose}
+                                            footer={[
+                                                <Button key="cancel" onClick={this.deleteFilterRuleClose}>
+                                                    取消
+                                                </Button>,
+                                                <Button key="confirm" type="primary" loading={this.state.deleteFilterRuleLoading}
+                                                        disabled={this.state.deleteFilterRuleDisable} onClick={this.deleteFilterRule}>
+                                                    确认
+                                                </Button>
+                                            ]}
+                                        >
+                                            <p>你将删除过滤规则：{this.state.deleteFilterRuleName}</p>
+                                        </Modal>
                                     </Form.Item>
                                 </Col>
                             </Row>
