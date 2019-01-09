@@ -648,8 +648,8 @@ class ExcelPage extends React.Component {
                                     </Form.Item>
                                 </Col>
                                 <Col span={4} key={'cd'}>
-                                    <Form.Item style = {{textAlign: 'right'}}>
-                                        <Button type="primary" onClick={this.showDeleteFilterRule}>删 除 规 则</Button>
+                                    <Form.Item className="excel-expr-update-button">
+                                        <Button type="primary" onClick={this.showDeleteFilterRule} icon={'delete'}>删除规则</Button>
                                         <Modal
                                             title="确认删除吗？"
                                             visible={this.state.deleteFilterRuleVisible}
@@ -674,7 +674,7 @@ class ExcelPage extends React.Component {
                                 <Col span={3} key={'cq'}>
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" loading={this.state.exprQueryLoading}
-                                                disabled={this.state.exprQueryDisable}>查询</Button>
+                                                disabled={this.state.exprQueryDisable} icon={'search'}>查询</Button>
                                     </Form.Item>
                                 </Col>
                                 <Col span={15} key={'ca'}>
@@ -685,10 +685,10 @@ class ExcelPage extends React.Component {
                                     </Form.Item>
                                 </Col>
                                 <Col span={4} key={'cs'}>
-                                    <Form.Item style = {{textAlign: 'right'}}>
+                                    <Form.Item className="excel-expr-update-button">
                                         <Button type="primary" onClick={this.showSaveFilterRule}
-                                                loading={this.state.filterRuleLoading}
-                                                disabled={this.state.filterRuleDisable}>保 存 规 则</Button>
+                                                loading={this.state.filterRuleLoading} icon={'save'}
+                                                disabled={this.state.filterRuleDisable}>保存规则</Button>
                                     </Form.Item>
                                     <Modal
                                         title="保存过滤规则"
@@ -755,6 +755,5 @@ class ExcelPage extends React.Component {
         );
     }
 }
-
 
 export default Form.create()(ExcelPage);

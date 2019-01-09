@@ -30,5 +30,8 @@
     height: 40px;
 }
 .excel-table-content {
-    background: white
+    background: white;
+}
+.excel-expr-update-button {
+    text-align: right;
 }

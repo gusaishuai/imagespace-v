@@ -489,7 +489,7 @@ class SqlPage extends React.Component {
                             <CodeMirror ref="editorSql" options={codemirrorOptions} />
                         </Content>
                         <Footer align="right">
-                            <Button type="primary" loading={this.state.buttonLoading} icon={'enter'}
+                            <Button type="primary" loading={this.state.buttonLoading} icon={'retweet'}
                                     disabled={this.state.buttonDisabled} onClick={this.clickExecSql}>
                                 执行（CTRL+ENTER）
                             </Button>

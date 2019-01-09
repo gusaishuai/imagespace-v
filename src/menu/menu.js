@@ -7,6 +7,7 @@ import md5 from "md5-node";
 
 import SqlPage from '../sql/sql.js';
 import ExcelPage from "../excel/excel.js";
+import UserPage from "../user/user.js";
 import EmptyPage from "../empty/empty.js";
 
 import './menu.css'
@@ -23,7 +24,8 @@ class MenuPage extends React.Component {
 
         allMenu: {
             "sql": <SqlPage/>,
-            "excel": <ExcelPage/>
+            "excel": <ExcelPage/>,
+            "user": <UserPage/>
         },
 
         collapsed: false,
