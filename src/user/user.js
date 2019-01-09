@@ -1,29 +1,32 @@
 import React from 'react';
 import {Form, Row, Col, Input, Button, Icon} from 'antd';
+import './user.css'
 
 class UserPage extends React.Component {
 
     render() {
+        const { getFieldDecorator } = this.props.form;
         return (
-                <Form
-                    // className="ant-advanced-search-form"
-                >
-                    <Row gutter={24}>123</Row>
-                    <Row>
-                        <Col span={24} style={{textAlign: 'right'}}>
-                            <Button type="primary" htmlType="submit">Search</Button>
-                            <Button style={{marginLeft: 8}} onClick={this.handleReset}>
-                                Clear
-                            </Button>
-                            <a style={{marginLeft: 8, fontSize: 12}} onClick={this.toggle}>
-                                Collapse <Icon type={'up'}/>
-                            </a>
-                        </Col>
-                    </Row>
-                </Form>
+            <Form className="ant-advanced-search-form">
+                <Row gutter={16} style={{marginLeft: '10%'}}>
+                    <Col span={8} key={'c1'}>
+                        <Form.Item label={`登录名`}>
+                            {getFieldDecorator(`loginName`, {
+                            })(
+                                <Input/>
+                            )}
+                        </Form.Item>
+                    </Col>
+                    <Col span={4} key={'c2'} style={{ textAlign: 'right' }}>
+                        <Form.Item>
+                            <Button type="primary" htmlType="submit" icon={'search'}>查询</Button>
+                        </Form.Item>
+                    </Col>
+                </Row>
+            </Form>
         );
     }
 
 }
 
-export default UserPage;
+export default Form.create()(UserPage);
