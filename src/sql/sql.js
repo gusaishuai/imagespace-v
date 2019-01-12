@@ -129,12 +129,14 @@ class SqlPage extends React.Component {
     getColumn = (data) => {
         let dataRows = [];
         let k = 0;
-        for (let j in data[0]) {
-            let dataRow = {};
-            dataRow.title = j;
-            dataRow.dataIndex = j;
-            dataRows[k] = dataRow;
-            k++;
+        if (data && data.length > 0) {
+            for (let j in data[0]) {
+                let dataRow = {};
+                dataRow.title = j;
+                dataRow.dataIndex = j;
+                dataRows[k] = dataRow;
+                k++;
+            }
         }
         return dataRows;
     };

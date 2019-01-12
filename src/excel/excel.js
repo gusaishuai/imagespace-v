@@ -189,12 +189,14 @@ class ExcelPage extends React.Component {
     getColumn = (data) => {
         let dataRows = [];
         let k = 0;
-        for (let j in data[0]) {
-            let dataRow = {};
-            dataRow.title = j;
-            dataRow.dataIndex = j;
-            dataRows[k] = dataRow;
-            k++;
+        if (data && data.length > 0) {
+            for (let j in data[0]) {
+                let dataRow = {};
+                dataRow.title = j;
+                dataRow.dataIndex = j;
+                dataRows[k] = dataRow;
+                k++;
+            }
         }
         return dataRows;
     };
@@ -393,7 +395,7 @@ class ExcelPage extends React.Component {
             openErrorNotify('必须选择一条规则');
             return;
         }
-        let filterRuleName = '未知规则';
+        let filterRuleName = '';
         this.state.filterRules.forEach((value) => {
             if (value.id === filterRule) {
                 filterRuleName = value.name;
