@@ -27,6 +27,7 @@ class ModifyPwdForm extends React.Component {
             <Form>
                 <Form.Item>
                     {getFieldDecorator('oldPassword', {
+                        validateTrigger: ['onChange', 'onBlur'],
                         rules: [{ required: true, message: '请输入原密码' }],
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="原密码" />
@@ -34,6 +35,7 @@ class ModifyPwdForm extends React.Component {
                 </Form.Item>
                 <Form.Item>
                     {getFieldDecorator('newPassword', {
+                        validateTrigger: ['onChange', 'onBlur'],
                         validateFirst: true,
                         rules: [
                             { required: true, message: '请输入新密码' },
@@ -47,7 +49,11 @@ class ModifyPwdForm extends React.Component {
                 </Form.Item>
                 <Form.Item>
                     {getFieldDecorator('newPasswordAgain', {
-                        rules: [{ required: true, message: '请重新输入新密码' }, { validator: this.newPwdAgainSame }],
+                        validateTrigger: ['onChange', 'onBlur'],
+                        rules: [
+                            { required: true, message: '请重新输入新密码' },
+                            { validator: this.newPwdAgainSame }
+                        ],
                     })(
                         <Input size={'large'} prefix={<Icon type="lock" className="modifypwd-form-icon" />} type="password" placeholder="重新输入新密码" />
                     )}

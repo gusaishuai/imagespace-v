@@ -93,6 +93,7 @@ class LoginPage extends React.Component {
                         <Form onSubmit={this.checkUser} className="login-form">
                             <Form.Item>
                                 {getFieldDecorator('userName', {
+                                    validateTrigger: ['onChange', 'onBlur'],
                                     rules: [{ required: true, message: '请输入用户名' }],
                                 })(
                                     <Input size={'large'} prefix={<Icon type="user" className="login-form-icon" />} placeholder="用户名" />
@@ -100,6 +101,7 @@ class LoginPage extends React.Component {
                             </Form.Item>
                             <Form.Item>
                                 {getFieldDecorator('password', {
+                                    validateTrigger: ['onChange', 'onBlur'],
                                     rules: [{ required: true, message: '请输入密码' }],
                                 })(
                                     <Input size={'large'} prefix={<Icon type="lock" className="login-form-icon" />} type="password" placeholder="密码" />
@@ -109,6 +111,7 @@ class LoginPage extends React.Component {
                                 <Row gutter={10}>
                                     <Col span={14}>
                                         {getFieldDecorator('captcha', {
+                                            validateTrigger: ['onChange', 'onBlur'],
                                             rules: [{ required: true, message: '请输入验证码' }],
                                         })(
                                             <Input size={'large'} prefix={<Icon type="safety" className="login-form-icon" />} placeholder="验证码" />

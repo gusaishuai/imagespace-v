@@ -186,6 +186,7 @@ class SqlPage extends React.Component {
             } else {
                 const execPagination = this.state.execPagination;
                 execPagination.total = data.result.pagination.totalCount;
+                execPagination.current = data.result.pagination.pageNo;
                 execPagination.pageSize = data.result.pagination.pageSize;
                 this.setState({
                     execData: data.result.resultList,
@@ -347,6 +348,7 @@ class SqlPage extends React.Component {
             } else {
                 const limitPagination = this.state.limitPagination;
                 limitPagination.total = data.result.pagination.totalCount;
+                limitPagination.current = data.result.pagination.pageNo;
                 limitPagination.pageSize = data.result.pagination.pageSize;
                 this.setState({
                     limitData: data.result.resultList,

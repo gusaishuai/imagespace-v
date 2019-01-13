@@ -3,6 +3,7 @@ import {Button, Col, Form, Input, Row, Table, Divider, Modal, Transfer} from 'an
 import reqwest from "reqwest";
 import {Redirect} from 'react-router-dom';
 
+import AddUserForm from './adduser/adduser.js'
 import {openErrorNotify, openSuccessNotify} from "../global";
 import './user.css'
 import {url} from "../config";
@@ -56,7 +57,11 @@ class UserPage extends React.Component {
 
         addMenuVisible: false,
         addMenuUserId: '',
-        userMenuTransferDisable: false
+        userMenuTransferDisable: false,
+
+        addUserVisible: false,
+        addUserLoading: false,
+        addUserDisable: false
     };
 
     componentDidMount() {
@@ -99,7 +104,7 @@ class UserPage extends React.Component {
     };
 
     //用户查询调用接口
-    getUserList = () => {
+    getUserList = (pageNo) => {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 this.setState({
@@ -114,7 +119,7 @@ class UserPage extends React.Component {
                     withCredentials: true,
                     data: {
                         'loginName': values.loginName,
-                        'pageNo': this.state.userPagination.current
+                        'pageNo': pageNo
                     },
                     type: 'json'
                 }).then((data) => {
@@ -125,6 +130,7 @@ class UserPage extends React.Component {
                     } else {
                         const userPagination = this.state.userPagination;
                         userPagination.total = data.result.totalCount;
+                        userPagination.current = data.result.pageNo;
                         userPagination.pageSize = data.result.pageSize;
                         this.setState({
                             userData: data.result.list,
@@ -151,7 +157,7 @@ class UserPage extends React.Component {
         this.setState({
             userPagination: userPagination
         });
-        this.getUserList();
+        this.getUserList(pagination.current);
     };
 
     //赋予菜单确认框显示
@@ -269,7 +275,7 @@ class UserPage extends React.Component {
                     deleteUserVisible: false
                 });
                 //刷新用户列表
-                this.getUserList();
+                this.getUserList(this.state.userPagination.current);
             }
         }, (err, msg) => {
             openErrorNotify(msg);
@@ -278,6 +284,63 @@ class UserPage extends React.Component {
                 deleteUserLoading: false,
                 deleteUserDisable: false
             });
+        });
+    };
+
+    //新增用户对话框打开
+    addUserOpen = () => {
+        this.setState({
+            addUserVisible: true
+        });
+    };
+
+    //新增用户关闭对话框
+    addUserClose = () => {
+        this.setState({
+            addUserVisible: false
+        });
+    };
+
+    //新增用户
+    addUser = () => {
+        this.refs.addUserForm.validateFields((err, values) => {
+            if (!err) {
+                this.setState({
+                    addUserLoading: true,
+                    addUserDisable: true
+                });
+                reqwest({
+                    url: 'http://' + url + '/exec?_mt=user.addUser',
+                    method: 'post',
+                    crossOrigin: true,
+                    withCredentials: true,
+                    data: {
+                        'loginName': values.loginName,
+                        'nick': values.nick
+                    },
+                    type: 'json'
+                }).then((data) => {
+                    if (data.code === global.respCode.noLogin) {
+                        this.setState({ noLoginRedirect: true });
+                    } else if (data.code !== global.respCode.success) {
+                        openErrorNotify(data.msg);
+                    } else {
+                        openSuccessNotify('账号新增成功');
+                        this.setState({
+                            addUserVisible: false
+                        });
+                        //刷新用户列表
+                        this.getUserList(this.state.userPagination.current);
+                    }
+                }, (err, msg) => {
+                    openErrorNotify(msg);
+                }).always(() => {
+                    this.setState({
+                        addUserLoading: false,
+                        addUserDisable: false
+                    });
+                });
+            }
         });
     };
 
@@ -303,7 +366,7 @@ class UserPage extends React.Component {
                         </Col>
                         <Col span={3} key={'c3'} style={{textAlign: 'right'}}>
                             <Form.Item>
-                                <Button type="primary" icon={'plus'}>新增</Button>
+                                <Button type="primary" icon={'plus'} onClick={this.addUserOpen}>新增</Button>
                             </Form.Item>
                         </Col>
                         <Modal
@@ -363,6 +426,22 @@ class UserPage extends React.Component {
                     size="middle"
                     className="user-query-table"
                 />
+                <Modal
+                    title="新增账号"
+                    visible={this.state.addUserVisible}
+                    onCancel={this.addUserClose}
+                    footer={[
+                        <Button key="cancel" onClick={this.addUserClose}>
+                            取消
+                        </Button>,
+                        <Button key="confirm" type="primary" loading={this.state.addUserLoading}
+                                disabled={this.state.addUserDisable} onClick={this.addUser}>
+                            确认
+                        </Button>
+                    ]}
+                >
+                    <AddUserForm ref="addUserForm" />
+                </Modal>
             </div>
         );
     }

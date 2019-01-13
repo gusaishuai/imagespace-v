@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Col, Form, Icon, Input, Layout, message, Modal, Row, Select, Table, Upload, Tooltip} from 'antd';
+import {Button, Col, Form, Icon, Input, Layout, message, Modal, Row, Select, Table, Upload, Tooltip, AutoComplete} from 'antd';
 import reqwest from 'reqwest';
 import {Redirect} from 'react-router-dom';
 
@@ -12,6 +12,9 @@ const Dragger = Upload.Dragger;
 
 const { Option } = Select;
 
+const ACOption = AutoComplete.Option;
+const OptGroup = AutoComplete.OptGroup;
+
 const { Content, Sider, Header } = Layout;
 
 const transposeColumns = [{
@@ -20,6 +23,14 @@ const transposeColumns = [{
     width: 1,
 }, {
     dataIndex: 'v',
+}];
+
+const dataSource = [{
+    id: '$idNo$', title: '身份证'
+},{
+    id: '$phone$', title: '手机号'
+},{
+    id: '$email$', title: '邮箱'
 }];
 
 let keyRow = 0;
@@ -203,12 +214,7 @@ class ExcelPage extends React.Component {
 
     //EXCEL查询 - 翻页
     excelTableChange = (pagination) => {
-        const excelPagination = this.state.excelPagination;
-        excelPagination.current = pagination.current;
-        this.setState({
-            excelPagination: excelPagination
-        });
-        this.excelQuery();
+        this.excelQuery(pagination.current);
     };
 
     //EXCEL根据规则查询
@@ -218,7 +224,7 @@ class ExcelPage extends React.Component {
     };
 
     //EXCEL查询或分页查询
-    excelQuery = () => {
+    excelQuery = (pageNo) => {
         this.props.form.validateFields((err, values) => {
             if (!err) {
                 this.setState({
@@ -234,7 +240,7 @@ class ExcelPage extends React.Component {
                     data: {
                         'sheetNum': values.sheetNum,
                         'topNum': values.topNum,
-                        'pageNo': this.state.excelPagination.current,
+                        'pageNo': pageNo,
                         'exprRows': values.exprRows,
                         'leftBracket': values.leftBracket,
                         'colNum': values.colNum,
@@ -252,6 +258,7 @@ class ExcelPage extends React.Component {
                     } else {
                         const excelPagination = this.state.excelPagination;
                         excelPagination.total = data.result.pagination.totalCount;
+                        excelPagination.current = data.result.pagination.pageNo;
                         excelPagination.pageSize = data.result.pagination.pageSize;
                         this.setState({
                             excelData: data.result.excelDataList,
@@ -539,7 +546,7 @@ class ExcelPage extends React.Component {
                     <Form.Item key={'f4_' + k}>
                         {getFieldDecorator(`regex[${k}]`, {
                             validateTrigger: ['onChange', 'onBlur'],
-                            initialValue: initialProp[k] ? initialProp[k].regex : '',
+                            initialValue: initialProp[k] ? initialProp[k].regex : undefined,
                             validateFirst: true,
                             rules: [{
                                 required: true,
@@ -549,7 +556,11 @@ class ExcelPage extends React.Component {
                                 message: '请设置小于256个字符'
                             }],
                         })(
-                            <Input placeholder="值或正则表达式" />
+                            <AutoComplete
+                                dataSource={options}
+                                placeholder="值或正则表达式"
+                                filterOption={(inputValue, option) => option.props.children.indexOf(inputValue) > -1}
+                            />
                         )}
                     </Form.Item>
                 </Col>
@@ -592,6 +603,17 @@ class ExcelPage extends React.Component {
 
         const filterRuleOptions = this.state.filterRules.map((k) => (
             <Option key={k.id} value={k.id}>{k.name}</Option>
+        ));
+
+        const options = dataSource.map(group => (
+            <OptGroup
+                key={group.id}
+                label={"112"}
+            >
+                <ACOption key={group.id} value={group.title}>
+                    {group.title}
+                </ACOption>
+            </OptGroup>
         ));
         
         return (

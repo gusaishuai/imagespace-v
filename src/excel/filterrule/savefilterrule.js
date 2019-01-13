@@ -96,6 +96,7 @@ class SaveFilterRuleForm extends React.Component {
                     <Col span={22} key={'ccq'}>
                         <Form.Item>
                             {getFieldDecorator('filterRuleName', {
+                                validateTrigger: ['onChange', 'onBlur'],
                                 validateFirst: true,
                                 rules: [{
                                     required: true,
@@ -106,7 +107,7 @@ class SaveFilterRuleForm extends React.Component {
                                     message: '请设置小于128个字符'
                                 }],
                             })(
-                                <Input size={'large'} prefix={<Icon type="paper-clip" className="excel-filter-rule-icon" />}
+                                <Input size={'large'} prefix={<Icon type="filter" className="excel-filter-rule-icon" />}
                                        placeholder="请输入过滤规则名称" />
                             )}
                         </Form.Item>
