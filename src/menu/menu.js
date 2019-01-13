@@ -52,7 +52,7 @@ class MenuPage extends React.Component {
 
     getMenuList = () => {
         reqwest({
-            url: 'http://' + url + '/exec?_mt=menu.getMenu',
+            url: 'http://' + url + '/exec?_mt=menu.getOwnMenu',
             method: 'post',
             crossOrigin: true,
             withCredentials: true,

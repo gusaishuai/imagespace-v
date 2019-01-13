@@ -1,13 +1,11 @@
 import React from 'react';
-import {Button, Col, Form, Input, Row, Table, Divider, Modal, Layout, Transfer} from 'antd';
+import {Button, Col, Form, Input, Row, Table, Divider, Modal, Transfer} from 'antd';
 import reqwest from "reqwest";
 import {Redirect} from 'react-router-dom';
 
 import {openErrorNotify, openSuccessNotify} from "../global";
 import './user.css'
 import {url} from "../config";
-
-const { Content, Header } = Layout;
 
 class UserPage extends React.Component {
 
@@ -53,25 +51,45 @@ class UserPage extends React.Component {
         deleteLoginName: '',
         deleteUserId: '',
 
-        allMenuList: [{
-            key: 1,
-            title: '菜单1'
-        },{
-            key: 2,
-            title: '菜单2'
-        },{
-            key: 3,
-            title: '菜单3'
-        }],
-        hasMenuKeyList: [2,3],
+        allMenuList: [],
+        ownMenuIdList: [],
 
         addMenuVisible: false,
+        addMenuUserId: '',
+        userMenuTransferDisable: false
     };
 
-    filterOption = (inputValue, option) => option.title.indexOf(inputValue) > -1;
+    componentDidMount() {
+        this.queryAllMenu();
+    }
 
-    handleChange = (targetKeys) => {
-        alert(targetKeys);
+    //查询所有菜单
+    queryAllMenu = () => {
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=menu.getAllMenu',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                data.result.map((k) => (
+                    this.state.allMenuList.push({
+                        key: k.id,
+                        title: k.name
+                    })
+                ));
+                this.setState({
+                    deleteUserVisible: false
+                });
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        });
     };
 
     //用户查询
@@ -90,7 +108,7 @@ class UserPage extends React.Component {
                     userLoading: true
                 });
                 reqwest({
-                    url: 'http://' + url + '/exec?_mt=user.userQuery',
+                    url: 'http://' + url + '/exec?_mt=user.queryUser',
                     method: 'post',
                     crossOrigin: true,
                     withCredentials: true,
@@ -136,10 +154,76 @@ class UserPage extends React.Component {
         this.getUserList();
     };
 
-    //赋予菜单
+    //赋予菜单确认框显示
     queryMenu = (userId) => {
         this.setState({
-            addMenuVisible: true
+            addMenuVisible: true,
+            addMenuUserId: userId
+        });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=user.queryUserMenu',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'userId': userId
+            },
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                this.setState({
+                    ownMenuIdList: data.result
+                });
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        });
+    };
+
+    //赋予菜单确认框关闭
+    addMenuClose = () => {
+        this.setState({
+            addMenuVisible: false
+        });
+    };
+
+    //赋予菜单搜索框
+    addMenuFilterOption = (inputValue, option) => option.title.indexOf(inputValue) > -1;
+
+    //赋予权限
+    handleChange = (targetKeys) => {
+        this.setState({
+            userMenuTransferDisable: true
+        });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=user.addUserMenu',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'userId': this.state.addMenuUserId,
+                'menuIds': targetKeys
+            },
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                //重新查询
+                this.queryMenu(this.state.addMenuUserId);
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        }).always(() => {
+            this.setState({
+                userMenuTransferDisable: false
+            });
         });
     };
 
@@ -166,7 +250,7 @@ class UserPage extends React.Component {
             deleteUserDisable: true
         });
         reqwest({
-            url: 'http://' + url + '/exec?_mt=user.userDelete',
+            url: 'http://' + url + '/exec?_mt=user.deleteUser',
             method: 'post',
             crossOrigin: true,
             withCredentials: true,
@@ -252,12 +336,14 @@ class UserPage extends React.Component {
                             <Transfer
                                 dataSource={this.state.allMenuList}
                                 showSearch
+                                disabled={this.state.userMenuTransferDisable}
                                 listStyle={{
                                     width: 250,
-                                    height: 300,
+                                    height: 300
                                 }}
-                                filterOption={this.filterOption}
-                                targetKeys={this.state.hasMenuKeyList}
+                                operations={['赋予', '删除']}
+                                filterOption={this.addMenuFilterOption}
+                                targetKeys={this.state.ownMenuIdList}
                                 onChange={this.handleChange}
                                 render={item => item.title}
                             />
