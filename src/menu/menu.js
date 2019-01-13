@@ -1,9 +1,10 @@
 import React from 'react';
-import {Button, Dropdown, Icon, Layout, Menu, Modal} from 'antd';
+import {Button, Dropdown, Icon, Layout, Menu, Modal,LocaleProvider} from 'antd';
 import 'antd/dist/antd.css';
 import {Redirect} from 'react-router-dom';
 import reqwest from 'reqwest';
 import md5 from "md5-node";
+import zhCN from 'antd/lib/locale-provider/zh_CN';
 
 import SqlPage from '../sql/sql.js';
 import ExcelPage from "../excel/excel.js";
@@ -23,9 +24,9 @@ class MenuPage extends React.Component {
         noLoginRedirect: false,
 
         allMenu: {
-            "sql": <SqlPage/>,
-            "excel": <ExcelPage/>,
-            "user": <UserPage/>
+            "sql": <LocaleProvider locale={zhCN}><SqlPage/></LocaleProvider>,
+            "excel": <LocaleProvider locale={zhCN}><ExcelPage/></LocaleProvider>,
+            "user": <LocaleProvider locale={zhCN}><UserPage/></LocaleProvider>
         },
 
         collapsed: false,
@@ -211,7 +212,7 @@ class MenuPage extends React.Component {
                                     <Menu.Item key="logout"><Icon type="logout" />登出</Menu.Item>
                                 </Menu>
                             } trigger={['click']}>
-                                <a className="ant-dropdown-link" href="#">
+                                <a className="ant-dropdown-link">
                                     {this.state.nick} <Icon type="down" />
                                 </a>
                             </Dropdown>

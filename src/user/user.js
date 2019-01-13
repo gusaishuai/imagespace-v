@@ -1,9 +1,13 @@
 import React from 'react';
-import {Button, Col, Form, Input, Row, Table, Divider, Modal} from 'antd';
+import {Button, Col, Form, Input, Row, Table, Divider, Modal, Layout, Transfer} from 'antd';
+import reqwest from "reqwest";
+import {Redirect} from 'react-router-dom';
+
+import {openErrorNotify, openSuccessNotify} from "../global";
 import './user.css'
 import {url} from "../config";
-import reqwest from "reqwest";
-import {openErrorNotify} from "../global";
+
+const { Content, Header } = Layout;
 
 class UserPage extends React.Component {
 
@@ -28,12 +32,12 @@ class UserPage extends React.Component {
                 width: 250,
                 render: (text, record) => (
                     <span>
-                        <a href="#" onClick={() => this.queryMenu(record.id)}>赋予菜单</a>
+                        <a onClick={() => this.queryMenu(record.id)}>赋予菜单</a>
                         <Divider type="vertical" />
-                        <a href="#" onClick={() => this.deleteUser(record.id, record.loginName)}>删除</a>
+                        <a onClick={() => this.deleteUser(record.id, record.loginName)}>删除</a>
                     </span>
                 )
-            },
+            }
         ],
         userPagination: {
             current: 1
@@ -48,6 +52,26 @@ class UserPage extends React.Component {
         deleteUserDisabled: false,
         deleteLoginName: '',
         deleteUserId: '',
+
+        allMenuList: [{
+            key: 1,
+            title: '菜单1'
+        },{
+            key: 2,
+            title: '菜单2'
+        },{
+            key: 3,
+            title: '菜单3'
+        }],
+        hasMenuKeyList: [2,3],
+
+        addMenuVisible: false,
+    };
+
+    filterOption = (inputValue, option) => option.title.indexOf(inputValue) > -1;
+
+    handleChange = (targetKeys) => {
+        alert(targetKeys);
     };
 
     //用户查询
@@ -114,7 +138,9 @@ class UserPage extends React.Component {
 
     //赋予菜单
     queryMenu = (userId) => {
-        alert(userId)
+        this.setState({
+            addMenuVisible: true
+        });
     };
 
     //删除人员弹框
@@ -135,12 +161,46 @@ class UserPage extends React.Component {
 
     //删除员工
     clickDeleteUser = () => {
-
+        this.setState({
+            deleteUserLoading: true,
+            deleteUserDisable: true
+        });
+        reqwest({
+            url: 'http://' + url + '/exec?_mt=user.userDelete',
+            method: 'post',
+            crossOrigin: true,
+            withCredentials: true,
+            data: {
+                'userId': this.state.deleteUserId
+            },
+            type: 'json'
+        }).then((data) => {
+            if (data.code === global.respCode.noLogin) {
+                this.setState({ noLoginRedirect: true });
+            } else if (data.code !== global.respCode.success) {
+                openErrorNotify(data.msg);
+            } else {
+                openSuccessNotify("账号删除成功");
+                this.setState({
+                    deleteUserVisible: false
+                });
+                //刷新用户列表
+                this.getUserList();
+            }
+        }, (err, msg) => {
+            openErrorNotify(msg);
+        }).always(() => {
+            this.setState({
+                deleteUserLoading: false,
+                deleteUserDisable: false
+            });
+        });
     };
 
     render() {
         const { getFieldDecorator } = this.props.form;
         return (
+            this.state.noLoginRedirect ? <Redirect to={{pathname:"/login"}} /> :
             <div>
                 <Form className="user-query-form" onSubmit={this.userQuery}>
                     <Row gutter={16} style={{marginLeft: '10%'}}>
@@ -152,11 +212,56 @@ class UserPage extends React.Component {
                                 )}
                             </Form.Item>
                         </Col>
-                        <Col span={4} key={'c2'} style={{textAlign: 'right'}}>
+                        <Col span={3} key={'c2'} style={{textAlign: 'right'}}>
                             <Form.Item>
                                 <Button type="primary" htmlType="submit" icon={'search'}>查询</Button>
                             </Form.Item>
                         </Col>
+                        <Col span={3} key={'c3'} style={{textAlign: 'right'}}>
+                            <Form.Item>
+                                <Button type="primary" icon={'plus'}>新增</Button>
+                            </Form.Item>
+                        </Col>
+                        <Modal
+                            title="确认删除吗？"
+                            visible={this.state.deleteUserVisible}
+                            onCancel={this.deleteUserClose}
+                            footer={[
+                                <Button key="cancel" onClick={this.deleteUserClose}>
+                                    取消
+                                </Button>,
+                                <Button key="confirm" type="primary" loading={this.state.deleteUserLoading}
+                                        disabled={this.state.deleteUserDisabled} onClick={this.clickDeleteUser}>
+                                    确认
+                                </Button>
+                            ]}
+                        >
+                            <p>你将删除账号：{this.state.deleteLoginName}</p>
+                        </Modal>
+                        <Modal
+                            title="赋予权限"
+                            width={'50%'}
+                            visible={this.state.addMenuVisible}
+                            onCancel={this.addMenuClose}
+                            footer={[
+                                <Button key="cancel" onClick={this.addMenuClose}>
+                                    取消
+                                </Button>
+                            ]}
+                        >
+                            <Transfer
+                                dataSource={this.state.allMenuList}
+                                showSearch
+                                listStyle={{
+                                    width: 250,
+                                    height: 300,
+                                }}
+                                filterOption={this.filterOption}
+                                targetKeys={this.state.hasMenuKeyList}
+                                onChange={this.handleChange}
+                                render={item => item.title}
+                            />
+                        </Modal>
                     </Row>
                 </Form>
                 <br/>
@@ -172,22 +277,6 @@ class UserPage extends React.Component {
                     size="middle"
                     className="user-query-table"
                 />
-                <Modal
-                    title="确认删除吗？"
-                    visible={this.state.deleteUserVisible}
-                    onCancel={this.deleteUserClose}
-                    footer={[
-                        <Button key="cancel" onClick={this.deleteUserClose}>
-                            取消
-                        </Button>,
-                        <Button key="confirm" type="primary" loading={this.state.deleteUserLoading}
-                                disabled={this.state.deleteUserDisabled} onClick={this.clickDeleteUser}>
-                            确认
-                        </Button>
-                    ]}
-                >
-                    <p>你将删除账号：{this.state.deleteLoginName}</p>
-                </Modal>
             </div>
         );
     }

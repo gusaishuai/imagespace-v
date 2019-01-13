@@ -673,13 +673,13 @@ class ExcelPage extends React.Component {
                             </Row>
                             {filterRuleRow}
                             <Row gutter={16} key={'rb'} className="excel-expr-row">
-                                <Col span={3} key={'cq'}>
+                                <Col span={6} key={'cq'}>
                                     <Form.Item>
                                         <Button type="primary" htmlType="submit" loading={this.state.exprQueryLoading}
-                                                disabled={this.state.exprQueryDisable} icon={'search'}>查询</Button>
+                                                disabled={this.state.exprQueryDisable} icon={'search'}>过滤查询</Button>
                                     </Form.Item>
                                 </Col>
-                                <Col span={15} key={'ca'}>
+                                <Col span={12} key={'ca'}>
                                     <Form.Item>
                                         <Button type="dashed" onClick={this.addExpr} className="excel-expr-add-button">
                                             <Icon type="plus" /> 添加过滤规则
