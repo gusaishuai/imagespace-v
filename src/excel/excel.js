@@ -12,9 +12,6 @@ const Dragger = Upload.Dragger;
 
 const { Option } = Select;
 
-const ACOption = AutoComplete.Option;
-const OptGroup = AutoComplete.OptGroup;
-
 const { Content, Sider, Header } = Layout;
 
 const transposeColumns = [{
@@ -26,9 +23,9 @@ const transposeColumns = [{
 }];
 
 const dataSource = [{
-    id: '$idNo$', title: '身份证'
+    id: '_idNo', title: '身份证'
 },{
-    id: '$phone$', title: '手机号'
+    id: '_phone', title: '手机号'
 },{
     id: '$email$', title: '邮箱'
 }];
@@ -464,6 +461,14 @@ class ExcelPage extends React.Component {
         });
     };
 
+    regexSpecialOption = (item) => {
+        return (
+            <AutoComplete.Option key={item.id} text={item.title}>
+                {item.title}
+            </AutoComplete.Option>
+        );
+    };
+
     render() {
 
         const props = {
@@ -557,7 +562,7 @@ class ExcelPage extends React.Component {
                             }],
                         })(
                             <AutoComplete
-                                dataSource={options}
+                                dataSource={dataSource.map(this.regexSpecialOption)}
                                 placeholder="值或正则表达式"
                                 filterOption={(inputValue, option) => option.props.children.indexOf(inputValue) > -1}
                             />
@@ -603,17 +608,6 @@ class ExcelPage extends React.Component {
 
         const filterRuleOptions = this.state.filterRules.map((k) => (
             <Option key={k.id} value={k.id}>{k.name}</Option>
-        ));
-
-        const options = dataSource.map(group => (
-            <OptGroup
-                key={group.id}
-                label={"112"}
-            >
-                <ACOption key={group.id} value={group.title}>
-                    {group.title}
-                </ACOption>
-            </OptGroup>
         ));
         
         return (
