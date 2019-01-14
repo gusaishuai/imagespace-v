@@ -12,8 +12,10 @@ class AddUserForm extends React.Component {
                 <Form.Item>
                     {getFieldDecorator('loginName', {
                         validateTrigger: ['onChange', 'onBlur'],
+                        validateFirst: true,
                         rules: [
-                            { required: true, message: '请输入用户名' }
+                            { required: true, message: '请输入用户名' },
+                            { max: 64, message: '请设置小于64个字符'}
                         ],
                     })(
                         <Input size={'large'} prefix={<Icon type="user" className="adduser-form-icon" />} placeholder="用户名" />
@@ -21,6 +23,10 @@ class AddUserForm extends React.Component {
                 </Form.Item>
                 <Form.Item>
                     {getFieldDecorator('nick', {
+                        validateTrigger: ['onChange'],
+                        rules: [
+                            { max: 64, message: '请设置小于64个字符'}
+                        ]
                     })(
                         <Input size={'large'} prefix={<Icon type="user" className="adduser-form-icon" />} placeholder="昵称" />
                     )}

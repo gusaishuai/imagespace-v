@@ -28,7 +28,7 @@ class UserPage extends React.Component {
                 title: '操作',
                 dataIndex: 'operate',
                 fixed: 'right',
-                width: 250,
+                width: '15vw',
                 render: (text, record) => (
                     <span>
                         <a onClick={() => this.queryMenu(record.id)}>赋予菜单</a>
@@ -164,6 +164,7 @@ class UserPage extends React.Component {
     queryMenu = (userId) => {
         this.setState({
             addMenuVisible: true,
+            userMenuTransferDisable: true,
             addMenuUserId: userId
         });
         reqwest({
@@ -182,6 +183,7 @@ class UserPage extends React.Component {
                 openErrorNotify(data.msg);
             } else {
                 this.setState({
+                    userMenuTransferDisable: false,
                     ownMenuIdList: data.result
                 });
             }
@@ -359,12 +361,12 @@ class UserPage extends React.Component {
                                 )}
                             </Form.Item>
                         </Col>
-                        <Col span={3} key={'c2'} style={{textAlign: 'right'}}>
+                        <Col span={3} key={'c2'} style={{textAlign: 'center'}}>
                             <Form.Item>
                                 <Button type="primary" htmlType="submit" icon={'search'}>查询</Button>
                             </Form.Item>
                         </Col>
-                        <Col span={3} key={'c3'} style={{textAlign: 'right'}}>
+                        <Col span={3} key={'c3'}>
                             <Form.Item>
                                 <Button type="primary" icon={'plus'} onClick={this.addUserOpen}>新增</Button>
                             </Form.Item>
@@ -401,8 +403,8 @@ class UserPage extends React.Component {
                                 showSearch
                                 disabled={this.state.userMenuTransferDisable}
                                 listStyle={{
-                                    width: 250,
-                                    height: 300
+                                    width: '40vh',
+                                    height: '50vh'
                                 }}
                                 operations={['赋予', '删除']}
                                 filterOption={this.addMenuFilterOption}

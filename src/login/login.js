@@ -111,7 +111,7 @@ class LoginPage extends React.Component {
                                 <Row gutter={10}>
                                     <Col span={14}>
                                         {getFieldDecorator('captcha', {
-                                            validateTrigger: ['onChange', 'onBlur'],
+                                            validateTrigger: ['onChange'],
                                             rules: [{ required: true, message: '请输入验证码' }],
                                         })(
                                             <Input size={'large'} prefix={<Icon type="safety" className="login-form-icon" />} placeholder="验证码" />
