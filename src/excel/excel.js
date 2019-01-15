@@ -22,14 +22,6 @@ const transposeColumns = [{
     dataIndex: 'v',
 }];
 
-const dataSource = [{
-    id: '$idNo$', title: '身份证'
-},{
-    id: '$phone$', title: '手机号'
-},{
-    id: '$email$', title: '邮箱'
-}];
-
 let keyRow = 0;
 
 class ExcelPage extends React.Component {
@@ -461,14 +453,6 @@ class ExcelPage extends React.Component {
         });
     };
 
-    regexSpecialOption = (item) => {
-        return (
-            <AutoComplete.Option key={item.id} text={item.title}>
-                {item.title}
-            </AutoComplete.Option>
-        );
-    };
-
     render() {
 
         const props = {
@@ -562,7 +546,7 @@ class ExcelPage extends React.Component {
                             }],
                         })(
                             <AutoComplete
-                                dataSource={dataSource.map(this.regexSpecialOption)}
+                                dataSource={['#身份证#', '#手机号#', '#邮箱#']}
                                 placeholder="值或正则表达式"
                                 filterOption={(inputValue, option) => option.props.children.indexOf(inputValue) > -1}
                             />
