@@ -23,9 +23,9 @@ const transposeColumns = [{
 }];
 
 const dataSource = [{
-    id: '_idNo', title: '身份证'
+    id: '$idNo$', title: '身份证'
 },{
-    id: '_phone', title: '手机号'
+    id: '$phone$', title: '手机号'
 },{
     id: '$email$', title: '邮箱'
 }];
