@@ -185,12 +185,12 @@ class SqlPage extends React.Component {
                 openErrorNotify(data.msg);
             } else {
                 const execPagination = this.state.execPagination;
-                execPagination.total = data.result.pagination.totalCount;
-                execPagination.current = data.result.pagination.pageNo;
-                execPagination.pageSize = data.result.pagination.pageSize;
+                execPagination.total = data.result.totalCount;
+                execPagination.current = data.result.pageNo;
+                execPagination.pageSize = data.result.pageSize;
                 this.setState({
-                    execData: data.result.resultList,
-                    execColumn: this.getColumn(data.result.resultList),
+                    execData: data.result.list,
+                    execColumn: this.getColumn(data.result.list),
                     execPagination: execPagination,
                 });
             }
@@ -347,12 +347,12 @@ class SqlPage extends React.Component {
                 openErrorNotify(data.msg);
             } else {
                 const limitPagination = this.state.limitPagination;
-                limitPagination.total = data.result.pagination.totalCount;
-                limitPagination.current = data.result.pagination.pageNo;
-                limitPagination.pageSize = data.result.pagination.pageSize;
+                limitPagination.total = data.result.totalCount;
+                limitPagination.current = data.result.pageNo;
+                limitPagination.pageSize = data.result.pageSize;
                 this.setState({
-                    limitData: data.result.resultList,
-                    limitColumn: this.getColumn(data.result.resultList),
+                    limitData: data.result.list,
+                    limitColumn: this.getColumn(data.result.list),
                     limitPagination: limitPagination,
                 });
             }

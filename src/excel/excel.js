@@ -246,12 +246,12 @@ class ExcelPage extends React.Component {
                         openErrorNotify(data.msg);
                     } else {
                         const excelPagination = this.state.excelPagination;
-                        excelPagination.total = data.result.pagination.totalCount;
-                        excelPagination.current = data.result.pagination.pageNo;
-                        excelPagination.pageSize = data.result.pagination.pageSize;
+                        excelPagination.total = data.result.totalCount;
+                        excelPagination.current = data.result.pageNo;
+                        excelPagination.pageSize = data.result.pageSize;
                         this.setState({
-                            excelData: data.result.excelDataList,
-                            excelColumn: this.getColumn(data.result.excelDataList),
+                            excelData: data.result.list,
+                            excelColumn: this.getColumn(data.result.list),
                             excelPagination: excelPagination,
                         });
                     }
@@ -539,7 +539,7 @@ class ExcelPage extends React.Component {
                             validateFirst: true,
                             rules: [{
                                 required: true,
-                                message: "请填写值或正则表达式",
+                                message: "请填写值、正则或下拉",
                             },{
                                 max: 256,
                                 message: '请设置小于256个字符'
@@ -547,7 +547,7 @@ class ExcelPage extends React.Component {
                         })(
                             <AutoComplete
                                 dataSource={['#身份证#', '#手机号#', '#邮箱#']}
-                                placeholder="值或正则表达式"
+                                placeholder="值、正则或下拉"
                                 filterOption={(inputValue, option) => option.props.children.indexOf(inputValue) > -1}
                             />
                         )}
