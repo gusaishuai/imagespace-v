@@ -353,7 +353,7 @@ class UserPage extends React.Component {
             <div>
                 <Form className="user-query-form" onSubmit={this.userQuery}>
                     <Row gutter={16} style={{marginLeft: '10%'}}>
-                        <Col span={6} key={'c1'}>
+                        <Col span={8} key={'c1'}>
                             <Form.Item label={`登录名`}>
                                 {getFieldDecorator(`loginName`, {
                                 })(

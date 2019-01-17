@@ -12,10 +12,18 @@ class QuartzPage extends React.Component {
     state = {
         noLoginRedirect: false,
 
-        userData: [],
+        userData: [{
+            'quartzName': "quartzName",
+            'className': "className",
+            'methodName': "methodName",
+            'startTime': "startTime",
+            'intervalTime': "intervalTime",
+            'repeatNum': "repeatNum",
+            'status': "status"
+        }],
         userColumn: [
             {
-                title: '定时任务名称',
+                title: '任务名',
                 dataIndex: 'quartzName'
             }, {
                 title: '类名',
@@ -37,12 +45,12 @@ class QuartzPage extends React.Component {
                 }]
             },{
                 title: '状态',
-                dataIndex: 'methodName'
+                dataIndex: 'status'
             }, {
                 title: '操作',
                 dataIndex: 'operate',
                 fixed: 'right',
-                width: '20vw',
+                width: '15vw',
                 render: (text, record) => (
                     <span>
                         <a onClick={() => this.queryMenu(record.id)}>执行</a>
@@ -90,15 +98,15 @@ class QuartzPage extends React.Component {
                 <div>
                     <Form className="user-query-form" onSubmit={this.userQuery}>
                         <Row gutter={16} style={{marginLeft: '10%'}}>
-                            <Col span={6} key={'c1'}>
-                                <Form.Item label={`定时任务名称`}>
+                            <Col span={8} key={'c1'}>
+                                <Form.Item label={`任务名`}>
                                     {getFieldDecorator(`loginName`, {
                                     })(
                                         <Input placeholder="模糊匹配" />
                                     )}
                                 </Form.Item>
                             </Col>
-                            <Col span={6} key={'c1'}>
+                            <Col span={8} key={'c1'}>
                                 <Form.Item label={`方法名`}>
                                     {getFieldDecorator(`loginName`, {
                                     })(
