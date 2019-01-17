@@ -9,6 +9,7 @@ import zhCN from 'antd/lib/locale-provider/zh_CN';
 import SqlPage from '../sql/sql.js';
 import ExcelPage from "../excel/excel.js";
 import UserPage from "../user/user.js";
+import QuartzPage from "../quartz/quartz.js";
 import EmptyPage from "../empty/empty.js";
 
 import './menu.css'
@@ -26,7 +27,8 @@ class MenuPage extends React.Component {
         allMenu: {
             "sql": <LocaleProvider locale={zhCN}><SqlPage/></LocaleProvider>,
             "excel": <LocaleProvider locale={zhCN}><ExcelPage/></LocaleProvider>,
-            "user": <LocaleProvider locale={zhCN}><UserPage/></LocaleProvider>
+            "user": <LocaleProvider locale={zhCN}><UserPage/></LocaleProvider>,
+            "quartz": <LocaleProvider locale={zhCN}><QuartzPage/></LocaleProvider>
         },
 
         collapsed: false,

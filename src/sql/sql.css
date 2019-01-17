@@ -2,7 +2,7 @@
     white-space: nowrap;
 }
 .sql-alltable-menu {
-    height: 65vh;
+    height: 400px;
     overflow: auto;
 }
 .sql-codemirror-layout {
