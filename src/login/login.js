@@ -85,8 +85,10 @@ class LoginPage extends React.Component {
                         <div style={{textAlign: 'left'}}><h1>在这里，你可以进行：</h1></div>
                         <br/><br/><br/>
                         <Carousel autoplay dots={false}>
-                            <div><h1><Icon type="select"/> SQL查询</h1></div>
-                            <div><h1><Icon type="file-excel"/> EXCEL操作</h1></div>
+                            <div><h1><Icon type="user"/>&nbsp;&nbsp;用户管理</h1></div>
+                            <div><h1><Icon type="select"/>&nbsp;&nbsp;SQL查询</h1></div>
+                            <div><h1><Icon type="file-excel"/>&nbsp;&nbsp;EXCEL过滤</h1></div>
+                            <div><h1><Icon type="clock-circle"/>&nbsp;&nbsp;定时任务管理</h1></div>
                         </Carousel>
                     </Sider>
                     <Content align="right" style={{padding: "10%"}}>

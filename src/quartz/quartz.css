@@ -1,15 +1,15 @@
-.user-query-form {
+.quartz-query-form {
     padding: 24px;
     background: #fbfbfb;
     border: 1px solid #d9d9d9;
     border-radius: 6px;
 }
-.user-query-form .ant-form-item {
+.quartz-query-form .ant-form-item {
     display: flex;
 }
-.user-query-form .ant-form-item-control-wrapper {
+.quartz-query-form .ant-form-item-control-wrapper {
     flex: 1;
 }
-.user-query-table {
+.quartz-query-table {
     background: white;
 }
