@@ -83,8 +83,8 @@ class MenuPage extends React.Component {
                     ownMenu: menuList.map(d =>
                         <Menu.Item key={d.route}>
                             <Icon type={d.logo} />
-                            <span>{d.name}</span>&nbsp;&nbsp;
-                            <Badge count={25} />
+                            <span>{d.name}</span>
+                            {d.route === 'chat' ? <Badge dot offset={[1, -5]}/> : undefined}
                         </Menu.Item>
                     )
                 });

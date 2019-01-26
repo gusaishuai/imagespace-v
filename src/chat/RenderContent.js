@@ -25,7 +25,7 @@ const RenderContent = memo(props => {
         );
     }
     if (props.text) {
-        return <div className='bubble'>{props.text}</div>;
+        return <div className={props.pos === 2 ? 'bubble' : 'bubble-right'}>{props.text}</div>;
     }
     if (props.voice) {
         return <audio src={props.voice ? props.voice : ''} controls />;
