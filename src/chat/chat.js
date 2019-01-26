@@ -1,5 +1,5 @@
 import React, { PureComponent, lazy, Suspense } from 'react';
-import { Avatar, Icon, Popover, Card, Input, Layout, Menu } from 'antd';
+import { Avatar, Icon, Popover, Card, Input, Layout, Menu, Badge } from 'antd';
 import './chat.css';
 
 // lodash 深比较
@@ -147,16 +147,16 @@ export default class ChatPage extends PureComponent {
                         >
                             <div style={{ height: '64vh', overflow: 'scroll'}}>
                                 <Menu mode="inline">
-                                    <Menu.Item key="3"><Icon type="user" /><span>好友1</span></Menu.Item>
-                                    <Menu.Item key="4"><Icon type="user" /><span>好友211111111111111</span></Menu.Item>
-                                    <Menu.Item key="41"><Icon type="user" /><span>好友2</span></Menu.Item>
+                                    <Menu.Item key="3"><Badge dot offset={[-8,0]}><Icon type="user" /></Badge><span>好友122</span></Menu.Item>
+                                    <Menu.Item key="4"><Badge dot offset={[-8,0]}><Icon type="user" /></Badge><span>好友211111111111111</span></Menu.Item>
+                                    <Menu.Item key="41" style={{color: 'lightgrey'}}><Icon type="user" /><span>好友2</span></Menu.Item>
                                     <Menu.Item key="42"><Icon type="user" /><span>好友2</span></Menu.Item>
                                     <Menu.Item key="43"><Icon type="user" /><span>好友2</span></Menu.Item>
                                     <Menu.Item key="44"><Icon type="user" /><span>好友2</span></Menu.Item>
                                     <Menu.Item key="45"><Icon type="user" /><span>好友2</span></Menu.Item>
                                     <Menu.Item key="46"><Icon type="user" /><span>好友2</span></Menu.Item>
                                     <Menu.Item key="416"><Icon type="user" /><span>好友2</span></Menu.Item>
-                                    <Menu.Item key="426"><Icon type="user" /><span>好友2</span></Menu.Item>
+                                    <Menu.Item key="426"><Icon type="user" /><span>好友21</span></Menu.Item>
                                 </Menu>
                             </div>
                         </Card>

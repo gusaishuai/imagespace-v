@@ -212,6 +212,8 @@ class MenuPage extends React.Component {
                         <div style={{float: 'right'}}>
                             <Dropdown overlay={
                                 <Menu onClick={this.dropDownMenuClick}>
+                                    <Menu.Item key="modifyPwd"><Icon type="lock" />修改信息</Menu.Item>
+                                    <Menu.Divider />
                                     <Menu.Item key="modifyPwd"><Icon type="lock" />修改密码</Menu.Item>
                                     <Menu.Divider />
                                     <Menu.Item key="logout"><Icon type="logout" />登出</Menu.Item>
