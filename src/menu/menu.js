@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Dropdown, Icon, Layout, Menu, Modal,LocaleProvider} from 'antd';
+import {Button, Dropdown, Icon, Layout, Menu, Modal, LocaleProvider, Badge} from 'antd';
 import 'antd/dist/antd.css';
 import {Redirect} from 'react-router-dom';
 import reqwest from 'reqwest';
@@ -10,6 +10,7 @@ import SqlPage from '../sql/sql.js';
 import ExcelPage from "../excel/excel.js";
 import UserPage from "../user/user.js";
 import QuartzPage from "../quartz/quartz.js";
+import ChatPage from "../chat/chat.js";
 import EmptyPage from "../empty/empty.js";
 
 import './menu.css'
@@ -28,7 +29,8 @@ class MenuPage extends React.Component {
             "sql": <LocaleProvider locale={zhCN}><SqlPage/></LocaleProvider>,
             "excel": <LocaleProvider locale={zhCN}><ExcelPage/></LocaleProvider>,
             "user": <LocaleProvider locale={zhCN}><UserPage/></LocaleProvider>,
-            "quartz": <LocaleProvider locale={zhCN}><QuartzPage/></LocaleProvider>
+            "quartz": <LocaleProvider locale={zhCN}><QuartzPage/></LocaleProvider>,
+            "chat": <LocaleProvider locale={zhCN}><ChatPage/></LocaleProvider>
         },
 
         collapsed: false,
@@ -81,7 +83,8 @@ class MenuPage extends React.Component {
                     ownMenu: menuList.map(d =>
                         <Menu.Item key={d.route}>
                             <Icon type={d.logo} />
-                            <span>{d.name}</span>
+                            <span>{d.name}</span>&nbsp;&nbsp;
+                            <Badge count={25} />
                         </Menu.Item>
                     )
                 });
