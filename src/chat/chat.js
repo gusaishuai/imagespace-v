@@ -14,6 +14,7 @@ class ChatPage extends React.Component {
     state = {
         deleteBtnSpin: false,
         loading: true,
+        nowLength: 0,
         textarea: '',
         textareaDisable: false,
         list: [
@@ -42,6 +43,7 @@ class ChatPage extends React.Component {
 
     componentDidMount() {
         document.addEventListener("keydown", this.ctrlEnter);
+        this.refs.textarea.focus();
         let socket = new WebSocket("ws://localhost:8080/webSocket");
         //打开事件
         socket.onopen = function() {
@@ -98,7 +100,10 @@ class ChatPage extends React.Component {
                 } else if (data.code !== global.respCode.success) {
                     openErrorNotify(data.msg);
                 } else {
-                    this.setState({ textarea: '' });
+                    this.setState({
+                        textarea: '',
+                        nowLength: 0
+                    });
                 }
             }, (err, msg) => {
                 openErrorNotify(msg);
@@ -106,12 +111,17 @@ class ChatPage extends React.Component {
                 this.setState({
                     textareaDisable: false
                 });
+                this.refs.textarea.focus();
             });
         }
     };
 
     changeTextArea = (e) => {
-        this.setState({ textarea: e.target.value });
+        let value = e.target.value;
+        this.setState({
+            textarea: value,
+            nowLength: value.length
+        });
     };
 
     render() {
@@ -121,10 +131,10 @@ class ChatPage extends React.Component {
         return (
             <div>
                 <Layout>
-                    <Sider width={'20%'}>
+                    <Sider width={'20%'} style={{background: 'transparent'}}>
                         <Card
                             title="好友列表"
-                            extra={<a href="#">我要上线</a>}
+                            extra={<a href="#">上线</a>}
                             bodyStyle={{padding: 10}}
                             size="small"
                         >
@@ -155,7 +165,7 @@ class ChatPage extends React.Component {
                                     {isRender &&
                                     list.map((item, listIndex) => {
                                         return (
-                                            <li className='list-item'>
+                                            <li className='list-item' key={listIndex}>
                                                 {item.time ? <span className='time'>{item.time}</span> : undefined}
                                                 <div
                                                     className={
@@ -193,13 +203,13 @@ class ChatPage extends React.Component {
                     </Layout>
                     <Sider width={'30%'} style={{paddingLeft: '1%', background: 'transparent'}}>
                         <Card
-                            title="回复内容"
+                            title={"回复内容（最多可输入 " + this.state.nowLength + "/2000 个字符）"}
                             extra={<a href="#">回复</a>}
                             size="small"
                             actions={[<Icon type="picture" />, <Icon type="sound" />, <Icon type="upload" />]}
                         >
-                            <TextArea onChange={this.changeTextArea} placeholder="请输入回复内容" disabled={this.state.textareaDisable}
-                                      value={this.state.textarea} autosize={{ minRows: 3, maxRows: 15 }} />
+                            <TextArea ref="textarea" onChange={this.changeTextArea} placeholder="请输入回复内容" disabled={this.state.textareaDisable}
+                                      value={this.state.textarea} autosize={{ minRows: 3, maxRows: 15 }} maxLength={2000} />
                         </Card>
                         <div>
 
